@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'CmdArgs',
     VERSION_FROM      => 'lib/CmdArgs.pm', # finds $VERSION
-    PREREQ_PM         => {'Exceptions'        =>  0.3.0,
+    PREREQ_PM         => {'Exceptions'        =>  '0.3.0',
                          }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/CmdArgs.pm', # retrieve abstract from module
