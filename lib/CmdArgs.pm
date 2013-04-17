@@ -209,8 +209,15 @@ sub m_help_message
   my $self = shift;
   my $ret = "usage:\n";
   my @ucs = values %{$self->{use_cases}};
-  $ret .= join '', map '  '.($_+1).': '.$self->m_use_case_msg($ucs[$_])."\n", 0..$#ucs;
-  $ret .= join '', map +($_+1).": $ucs[$_]{descr}\n", 0..$#ucs;
+  if (@ucs == 1){
+    # do not print number before use case
+    $ret .= '  '.$self->m_use_case_msg($ucs[0])."\n";
+    $ret .= "$ucs[0]{descr}\n";
+  }
+  else{
+    $ret .= join '', map '  '.($_+1).': '.$self->m_use_case_msg($ucs[$_])."\n", 0..$#ucs;
+    $ret .= join '', map +($_+1).": $ucs[$_]{descr}\n", 0..$#ucs;
+  }
   while (my ($gr_name, $gr_cont) = each %{$self->{groups}}){
     $ret .= "$gr_name:\n";
     for my $opt (map $self->{options}{$_}, @$gr_cont){
