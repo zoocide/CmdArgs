@@ -119,7 +119,7 @@ sub parse
   try{
     my @wrp_iters = map { [$_, [$self->{use_cases}{$_}{sequence}, []]] }
                         keys %{$self->{use_cases}};
-    while (@args && @wrp_iters){
+    while (@args){
       my $atom = $self->m_get_atom(\@args);
       @wrp_iters = map {
         my $u = $_->[0];
@@ -128,6 +128,7 @@ sub parse
       @wrp_iters || throw Exception => 'wrong '.(  $atom->[0] eq 'opt' ? 'option' : 'argument')
                                                ." '$atom->[1]'";
     }
+    # finish with 'end' atom
     @wrp_iters = map {
       my $u = $_->[0];
       map [$u, $_], $self->m_fwd_iter(['end'], $_->[1])
