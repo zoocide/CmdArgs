@@ -198,6 +198,7 @@ sub m_usage_message
   while(my ($uc_name, $uc) = each %{$self->{use_cases}}){
     $ret .= '  '.$self->m_use_case_msg($uc)."\n";
   }
+  $ret .= "Try --help option for help.\n";
   $ret
 }
 
