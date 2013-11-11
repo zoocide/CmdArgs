@@ -11,11 +11,7 @@ our $VERSION = '0.2.1';
 
 =head1 NAME
 
-CmdArgs
-
-=head1 ABSTRACT
-
-Parse command line arguments and automate help message creation.
+CmdArgs - Parse command line arguments and automate help message creation.
 
 =head1 SYNOPSIS
 
