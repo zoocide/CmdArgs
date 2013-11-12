@@ -19,7 +19,7 @@ CmdArgs - Parse command line arguments and automate help message creation.
 
   use CmdArgs;
 
-  {package CmdArgs::Types::Filename; sub check{my $arg = shift; -f $arg}}
+  {package CmdArgs::Types::Filename; sub check{my $arg = $_[1]; -f $arg}}
 
   my $args = CmdArgs->declare(
     $version,
@@ -678,7 +678,7 @@ where
   arg_name... - array of arguments
   arg_name? - optional argument
 
-By default there is 'main' use case declared as ['OPTIONS args...', ''].
+If use_cases section is missed, by default there is 'main' use case declared as ['OPTIONS args...', ''].
 
 =item restrictions
 
@@ -723,13 +723,16 @@ Return name of parsed use case.
 
 =head1 TYPES
 
-To declare a new type, a package with some methods should be defined.
+To declare a new type, a corresponding package should be defined.
+To define 'MyType' there should be package named 'CmdArgs::Types::MyType',
+that contains subroutine 'check'.
+Subroutine 'check' must validate argument by returning positive boolean value.
 For example:
   {
     package CmdArgs::Types::MyTypeName;
     sub check
     {
-      my $arg = shift;
+      my ($class, $arg) = @_;
       -f $arg
     }
   }
