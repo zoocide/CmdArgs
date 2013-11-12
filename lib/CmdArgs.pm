@@ -124,6 +124,7 @@ sub parse
       @wrp_iters || throw Exception => 'wrong '.(  $atom->[0] eq 'opt' ? 'option' : 'argument')
                                                ." '$atom->[1]'";
     }
+	#TODO: if $#wrp_iters == 0,  say, where it stops.
     # finish with 'end' atom
     @wrp_iters = map {
       my $u = $_->[0];
