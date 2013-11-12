@@ -418,8 +418,13 @@ sub m_check_type
 {
   my ($self, $type) = @_;
   return if !$type;
-  eval{ "CmdArgs::Types::$type"->can('check') || die };
-  $@ && throw Exception => "wrong type specified '$type'";
+  my $package = "CmdArgs::Types::$type";
+  exists $CmdArgs::Types::{$type.'::'}
+    or throw Exception => "wrong type specified '$type'. "
+      ."Type '$type' should be defined by package 'CmdArgs::Types::$type'. "
+	  ."See CmdArgs manual for more details.";
+  eval{ $package->can('check') } || $@
+    or throw Exception => "$package should have subroutine 'check'.";
 }
 
 # throws: Exceptions::Exception, ...
