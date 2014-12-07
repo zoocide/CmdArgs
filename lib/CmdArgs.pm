@@ -69,13 +69,13 @@ sub args { %{$_[0]{parsed}{args}} }
 sub opts { %{$_[0]{parsed}{options}} }
 sub use_case { $_[0]{parsed}{use_case} }
 
-# throws: string, Exceptions::Exception
+# throws: string
 sub declare
 {
   my $class = shift;
   my $self = bless {}, $class;
   eval { $self->init(@_) };
-  croak $@ if $@;
+  croak "$@" if $@;
   $self
 }
 
@@ -641,7 +641,7 @@ __END__
 
 =item declare($version, section => value, ...)
 
-throws: string, Exceptions::Exception
+throws: string
 
 $version is a string, for example, '1.0.1'.
 
