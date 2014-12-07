@@ -23,6 +23,7 @@ CmdArgs - Parse command line arguments and automate help message creation.
 
   my $args = CmdArgs->declare(
     $version,
+    ## You can use [] instead of {} if use_cases order is important ##
     use_cases => { ##< 'main' is the default use case: ['OPTIONS args...', '']
       main   => ['OPTIONS arg1:Filename arg2:Testset', 'the main use case'],
       second => ['OPTS_GROUP_1 arg_1 OPTS_GROUP_2 arg_2', 'the second usage'],
@@ -196,8 +197,11 @@ sub m_usage_message
 {
   my $self = shift;
   my $ret = "usage:\n";
-  while(my ($uc_name, $uc) = each %{$self->{use_cases}}){
-    $ret .= '  '.$self->m_use_case_msg($uc)."\n";
+  my @uc_names = exists $self->{use_cases_order}
+               ? @{$self->{use_cases_order}}
+               : keys $self->{use_cases};
+  for my $uc_name (@uc_names){
+    $ret .= '  '.$self->m_use_case_msg($self->{use_cases}{$uc_name})."\n";
   }
   $ret .= "Try --help option for help.\n";
   $ret
@@ -207,7 +211,10 @@ sub m_help_message
 {
   my $self = shift;
   my $ret = "usage:\n";
-  my @ucs = values %{$self->{use_cases}};
+  my @uc_names = exists $self->{use_cases_order}
+               ? @{$self->{use_cases_order}}
+               : keys $self->{use_cases};
+  my @ucs = map $self->{use_cases}{$_}, @uc_names;
   if (@ucs == 1){
     # do not print number before use case
     $ret .= '  '.$self->m_use_case_msg($ucs[0])."\n";
@@ -294,8 +301,13 @@ sub m_use_cases
   # remove default main use_case
   delete $self->{use_cases}{main};
 
+  if (ref $use_cases eq 'ARRAY'){
+    $self->{use_cases_order} = [@{$use_cases}[grep {!($_ & 1)} 0..$#$use_cases]];
+    $use_cases = {@$use_cases};
+  }
+
   ref $use_cases eq 'HASH'
-    || throw Exception => 'wrong use cases specification: hash should be used';
+    || throw Exception => 'wrong use cases specification: hash or array should be used';
 
   while (my ($name, $val) = each %$use_cases){
     $self->{use_cases}{$name} = $self->m_use_case($name, $val);
@@ -688,6 +700,10 @@ where:
   arg_name... - array of arguments. One or more arguments are permitted.
   arg_name...? - array of arguments. Zero or more arguments are permitted.
   arg_name? - optional argument
+
+To preserve use-cases order you should use [] instead of {}:
+
+  use_cases => [ use_case_name => [ ... ], ... ],
 
 If use_cases section is missed, by default there is I<main> use case declared as C<['OPTIONS args...', '']>.
 
