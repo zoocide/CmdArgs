@@ -124,7 +124,7 @@ sub parse
       @wrp_iters || throw Exception => 'wrong '.(  $atom->[0] eq 'opt' ? 'option' : 'argument')
                                                ." '$atom->[1]'";
     }
-	#TODO: if $#wrp_iters == 0,  say, where it stops.
+    #TODO: if $#wrp_iters == 0,  say, where it stops.
     # finish with 'end' atom
     @wrp_iters = map {
       my $u = $_->[0];
@@ -645,7 +645,7 @@ throws: string, Exceptions::Exception
 
 $version is a string, for example, '1.0.1'.
 
-SECTIONS:
+B<SECTIONS:>
 
 =over
 
@@ -665,15 +665,19 @@ Options '--help' and '--version' are automatically generated.
 =item groups
 
 Named groups of options.
+
   groups => { group_name => [qw(opt_1 opt_2 ...], ... }
 
-By default there is 'OPTIONS' group contained all options.
+By default there is I<OPTIONS> group contained all options.
 
 =item use_cases
 
 It declares use cases, that is alternate sequences of options and arguments.
+
   use_cases => { use_case_name => ['atoms_list', 'use case help message'], ... }
-where
+
+where:
+
   'atoms_list' = list of space separated atoms.
   'atom' = group_name | opt_name | arg_name
   group_name - means that at this place an options from specified group can appear.
@@ -681,15 +685,18 @@ where
   arg_name - an argument named 'arg_name'.
   arg_name: - an argument with value of any type.
   arg_name:type - an argument with value of the specified type
-  arg_name... - array of arguments
+  arg_name... - array of arguments. One or more arguments are permitted.
+  arg_name...? - array of arguments. Zero or more arguments are permitted.
   arg_name? - optional argument
 
-If use_cases section is missed, by default there is 'main' use case declared as ['OPTIONS args...', ''].
+If use_cases section is missed, by default there is I<main> use case declared as C<['OPTIONS args...', '']>.
 
 =item restrictions
 
 NOT IMPLEMENTED YET!
-restrictions => ['opt_1|opt_2|opt_3', ...]
+
+  restrictions => ['opt_1|opt_2|opt_3', ...]
+
 That is, opt_1, opt_2 and opt_3 can not appear simultaneously.
 
 =back
@@ -734,6 +741,7 @@ To define 'MyType' there should be package named 'CmdArgs::Types::MyType',
 that contains subroutine 'check'.
 Subroutine 'check' must validate argument by returning positive boolean value.
 For example:
+
   {
     package CmdArgs::Types::MyTypeName;
     sub check
