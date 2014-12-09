@@ -129,8 +129,9 @@ sub parse
         my $u = $_->[0];
         map [$u, $_], $self->m_fwd_iter($atom, $_->[1])
       } @wrp_iters;
-      @wrp_iters || throw Exception => 'wrong '.(  $atom->[0] eq 'opt' ? 'option' : 'argument')
-                                               ." '$atom->[1]'";
+      @wrp_iters || throw Exception => 'wrong '.(  $atom->[0] eq 'opt'
+                                                ? "option '$atom->[2]'"
+                                                : "argument '$atom->[1]'");
     }
     #TODO: if $#wrp_iters == 0,  say, where it stops.
     # finish with 'end' atom
@@ -502,7 +503,7 @@ sub m_get_atom
     $opt eq 'HELP'    && throw CmdArgsInfo => $self->m_help_message;
     $opt eq 'VERSION' && throw CmdArgsInfo => $self->m_version_message;
 
-    return ['opt', $opt];
+    return ['opt', $opt, $cur]; #< $cur here needed only for nicer error message.
   }
 
   ## get argument ##
