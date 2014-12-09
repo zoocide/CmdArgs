@@ -4,4 +4,5 @@ MANIFEST
 README
 t/CmdArgs.t
 t/CmdArgs.0.3.t
+t/CmdArgs.1.0.t
 lib/CmdArgs.pm
