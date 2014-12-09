@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 161;
+use Test::More tests => 165;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -803,3 +803,27 @@ eval{
 isnt("$@", '');
 isa_ok($@, 'Exceptions::CmdArgsInfo');
 like("$@", qr/4\.2/);
+
+### more options syntax ###
+
+## key1: key2 ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { f => ['-f: --file'], },
+  );
+  $args->parse('-f filename arg');
+};
+is("$@", '');
+is(eval {$args->opt('f')}, 'filename');
+
+## key1:Type key2 ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { f => ['-f:Word_ok --file'], },
+  );
+  $args->parse('--file ok arg');
+};
+is("$@", '');
+is(eval {$args->opt('f')}, 'ok');
