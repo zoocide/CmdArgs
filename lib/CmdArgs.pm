@@ -260,6 +260,8 @@ sub m_init_defaults
   $self->{options}{HELP}    = { keys  => ['--help'   ], type  => undef, descr => 'print help' };
   $self->{options}{VERSION} = { keys  => ['--version'], type  => undef, descr => 'print version' };
   $self->{groups}{OPTIONS}  = [qw(HELP VERSION)];
+  $self->{arrangement}{first_keys}{'--help'} = 'HELP';
+  $self->{arrangement}{first_keys}{'--version'} = 'VERSION';
   $self->{use_cases}{main} = { use_case => 'OPTIONS args...',
                                sequence => [['group', 'OPTIONS'],
                                            [['arg','args','','','...'],
@@ -278,7 +280,9 @@ sub m_options
     $self->{options}{$name} = $self->m_option($name, $val);
   }
 
-  @{$self->{groups}{OPTIONS}} = keys %{$self->{options}};
+  ## arrange options by the first key ##
+  my @fkeys = sort keys $self->{arrangement}{first_keys};
+  @{$self->{groups}{OPTIONS}} = map $self->{arrangement}{first_keys}{$_}, @fkeys;
 }
 
 # throws: Exceptions::Exception
@@ -369,6 +373,9 @@ sub m_option
     $type = $2;
     $self->m_check_type($type);
   }
+
+  ## save the first key for options arrangement ##
+  $self->{arrangement}{first_keys}{$keys[0]} = $name;
 
   ## check all keys ##
   foreach (@keys){
