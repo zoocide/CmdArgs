@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 30;
+use Test::More tests => 33;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -107,6 +107,19 @@ isnt("$@", '');
 isa_ok($@, 'Exceptions::CmdArgsInfo');
 like("$@", qr/FILE/);
 
-## restrictions ##
+### restrictions ###
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { o1 => ['-a'], o2 => ['-b'], o3 => ['-c'], },
+    restrictions => ['o1|o2', 'o2|o3'],
+  );
+  $args->parse('-ac arg');
+};
+is("$@", '');
+eval { $args->parse('-b arg') };
+is("$@", '');
+eval { $args->parse('-bc arg') };
+isnt("$@", '');
 
 ## convert method of Types ##

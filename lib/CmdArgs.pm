@@ -11,15 +11,12 @@ our $VERSION = '0.3.0';
 
 ## TODO: Add CmdArgs::Types::BasicTypes - a set of useful simple CmdArgs::Types.
 ## TODO: Add method 'convert' for types.
-## TODO: Add restrictions.
 
 =head1 NAME
 
 CmdArgs - Parse command line arguments and automate help message creation.
 
 =head1 SYNOPSIS
-
-  NOTE: restrictions are not implemented yet!!!
 
   use CmdArgs;
 
@@ -327,26 +324,33 @@ sub m_use_cases
   }
 }
 
+# on result:
+#   for each $opt, specified in restrictions:
+#   $self->{restrictions}{$opt} = [@options_conflicting_with_opt];
 # throws: Exceptions::Exception
 sub m_restrictions
 {
   my ($self, $restrs) = @_;
 
   ## unpack restrictions ##
-  my @res;
+  my %res;
   ref $restrs eq 'ARRAY'
     || throw Exception => 'wrong restrictions specification: array must be used';
   for (@$restrs){
-    my @opts = split /|/;
-    for (@opts){
-      exists $self->{options}{$_}
-        || throw Exception => "unknow option '$_' is specified in restriction";
+    my @opts = split /\|/;
+    for my $o (@opts){
+      exists $self->{options}{$o}
+        || throw Exception => "unknow option '$o' is specified in restriction";
+      $res{$o} ||= [];
+      push $res{$o}, grep {
+        my $a = $_;
+        $a ne $o && !grep {$a eq $_} @{$res{$o}}
+      } @opts;
     }
-    push @res, [@opts];
   }
 
-  ## add restrictions ##
-  $self->{restrictions} = [@res];
+  ## set restrictions ##
+  $self->{restrictions} = \%res;
 }
 
 # on result:
@@ -497,6 +501,16 @@ sub m_get_atom
     }
     exists $self->{keys}{$cur} || throw Exception => "unknown option '$cur'";
     my $opt = $self->{keys}{$cur};
+
+    ## check restrictions ##
+    if (exists $self->{restrictions}{$opt}){
+      for (@{$self->{restrictions}{$opt}}){
+        exists $self->{parsed}{options}{$_}
+            && throw Exception => "option '$cur' can not be used with option "
+                                 ."'$self->{parsed}{option_keys}{$_}'";
+      }
+    }
+
     my $param = 1;
     if (defined $self->{options}{$opt}{type}){
     # option with parameter #
@@ -508,6 +522,7 @@ sub m_get_atom
         || throw Exception => "wrong parameter '$param' for option '$cur'";
     }
     $self->{parsed}{options}{$opt} = $param;
+    $self->{parsed}{option_keys}{$opt} = $cur;
     # do action
     exists $self->{options}{$opt}{action}
         && &{$self->{options}{$opt}{action}}($param);
@@ -745,8 +760,6 @@ To preserve use-cases order you should use [] instead of {}:
 If I<use_cases> section is missed, by default there is I<main> use case declared as C<['OPTIONS args...', '']>.
 
 =item restrictions
-
-NOT IMPLEMENTED YET!
 
   restrictions => ['opt_1|opt_2|opt_3', ...]
 
