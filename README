@@ -18,6 +18,7 @@ This module requires these other modules and libraries:
 
   Carp
   Exceptions
+  Scalar::Util
 
 AUTHOR
 

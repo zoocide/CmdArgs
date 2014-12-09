@@ -9,7 +9,6 @@ use Carp;
 
 our $VERSION = '0.3.0';
 
-## TODO: Add CmdArgs::Types::BasicTypes - a set of useful simple CmdArgs::Types.
 ## TODO: Add method 'convert' for types.
 
 =head1 NAME

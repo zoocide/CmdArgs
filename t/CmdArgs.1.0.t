@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More tests => 44;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -120,6 +120,45 @@ is("$@", '');
 eval { $args->parse('-b arg') };
 is("$@", '');
 eval { $args->parse('-bc arg') };
+isnt("$@", '');
+
+
+### check BasicTypes ###
+
+## load BasicTypes ##
+eval { require "CmdArgs/BasicTypes.pm" };
+is("$@", '');
+
+## check Int ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    use_cases => { main => ['n:Int'], second => ['f:File'], },
+  );
+  $args->parse('10');
+};
+is("$@", '');
+is(eval{ $args->arg('n') }, 10);
+eval{ $args->parse('-- -10') };
+is("$@", '');
+is(eval{ $args->arg('n') }, -10);
+eval{ $args->parse('1.2') };
+isnt("$@", '');
+
+## check Real ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    use_cases => { main => ['n:Real'], second => ['f:File'], },
+  );
+  $args->parse('10');
+};
+is("$@", '');
+is(eval{ $args->arg('n') }, 10);
+eval{ $args->parse('-- -1.2') };
+is("$@", '');
+is(eval{ $args->arg('n') }, -1.2);
+eval{ $args->parse('not_a_number') };
 isnt("$@", '');
 
 ## convert method of Types ##
