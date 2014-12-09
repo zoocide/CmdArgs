@@ -13,6 +13,7 @@ our $VERSION = '0.3.0';
 ## TODO: Add method 'convert' for types.
 ## TODO: Add restrictions.
 ## TODO: Arrange options by the first key.
+## TODO: Allow to specify options argument name.
 
 =head1 NAME
 
@@ -129,7 +130,7 @@ sub parse
         my $u = $_->[0];
         map [$u, $_], $self->m_fwd_iter($atom, $_->[1])
       } @wrp_iters;
-      @wrp_iters || throw Exception => 'wrong '.(  $atom->[0] eq 'opt'
+      @wrp_iters || throw Exception => 'unexpected '.(  $atom->[0] eq 'opt'
                                                 ? "option '$atom->[2]'"
                                                 : "argument '$atom->[1]'");
     }
