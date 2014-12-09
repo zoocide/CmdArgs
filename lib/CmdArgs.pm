@@ -818,7 +818,7 @@ For example:
     sub check
     {
       my ($class, $arg) = @_;
-      -f $arg
+      -f $arg or die "'$arg' is not a file\n"
     }
   }
 
