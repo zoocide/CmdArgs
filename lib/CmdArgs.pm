@@ -227,6 +227,7 @@ sub m_help_message
   while (my ($gr_name, $gr_cont) = each %{$self->{groups}}){
     $ret .= "$gr_name:\n";
     for my $opt (map $self->{options}{$_}, @$gr_cont){
+      next if !defined $opt->{descr};
       $ret .= "\t".join(', ', @{$opt->{keys}});
       $ret .= ' <arg>' if defined $opt->{type};
       $ret .= "\t$opt->{descr}\n";
@@ -673,6 +674,11 @@ B<SECTIONS:>
     'key:type key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
 
 Options '--help' and '--version' are automatically generated.
+
+You can hide an option from the help message,
+by specifying explicit C<undef> value for its description, e.g.:
+
+  options => { hiden_opt => ['--hiden', undef], ... },
 
 =item groups
 
