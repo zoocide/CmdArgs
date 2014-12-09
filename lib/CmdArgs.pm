@@ -206,8 +206,8 @@ sub m_usage_message
 {
   my $self = shift;
   my $ret = "usage:\n";
-  my @uc_names = exists $self->{use_cases_order}
-               ? @{$self->{use_cases_order}}
+  my @uc_names = exists $self->{arrangement}{use_cases}
+               ? @{$self->{arrangement}{use_cases}}
                : keys $self->{use_cases};
   for my $uc_name (@uc_names){
     $ret .= '  '.$self->m_use_case_msg($self->{use_cases}{$uc_name})."\n";
@@ -220,8 +220,8 @@ sub m_help_message
 {
   my $self = shift;
   my $ret = "usage:\n";
-  my @uc_names = exists $self->{use_cases_order}
-               ? @{$self->{use_cases_order}}
+  my @uc_names = exists $self->{arrangement}{use_cases}
+               ? @{$self->{arrangement}{use_cases}}
                : keys $self->{use_cases};
   my @ucs = map $self->{use_cases}{$_}, @uc_names;
   if (@ucs == 1){
@@ -316,7 +316,7 @@ sub m_use_cases
   delete $self->{use_cases}{main};
 
   if (ref $use_cases eq 'ARRAY'){
-    $self->{use_cases_order} = [@{$use_cases}[grep {!($_ & 1)} 0..$#$use_cases]];
+    $self->{arrangement}{use_cases} = [@{$use_cases}[grep {!($_ & 1)} 0..$#$use_cases]];
     $use_cases = {@$use_cases};
   }
 
