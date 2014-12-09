@@ -38,7 +38,7 @@ CmdArgs - Parse command line arguments and automate help message creation.
     },
     options => {
       opt_1  => ['-f:Filename --filename', 'specify filename'],
-      opt_2  => ['-i: --input'           , 'specify input filename'],
+      opt_2  => ['-i:<FILE> --input'     , 'read input from FILE'],
       opt_3  => ['-s'                    , 'silent mode'],
       opt_9  => ['-z'                    , 'Zzz'],
       opt_17 => ['-0 --none --bla-bla'   , '0. simply 0'],
@@ -717,7 +717,7 @@ Named groups of options.
 
   groups => { group_name => [qw(opt_1 opt_2 ...], ... }
 
-By default there is I<OPTIONS> group contained all options.
+If I<groups> section is missed, by default there is I<OPTIONS> group contained all options.
 
 =item use_cases
 
@@ -742,7 +742,7 @@ To preserve use-cases order you should use [] instead of {}:
 
   use_cases => [ use_case_name => [ ... ], ... ],
 
-If use_cases section is missed, by default there is I<main> use case declared as C<['OPTIONS args...', '']>.
+If I<use_cases> section is missed, by default there is I<main> use case declared as C<['OPTIONS args...', '']>.
 
 =item restrictions
 
