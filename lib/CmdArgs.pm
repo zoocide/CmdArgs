@@ -12,7 +12,6 @@ our $VERSION = '0.3.0';
 ## TODO: Add CmdArgs::Types::BasicTypes - a set of useful simple CmdArgs::Types.
 ## TODO: Add method 'convert' for types.
 ## TODO: Add restrictions.
-## TODO: Allow to specify options argument name.
 
 =head1 NAME
 
@@ -184,10 +183,11 @@ sub m_use_case_msg
       $ret.= ' '.$cur->[1];
     }
     elsif ($cur->[0] eq 'mopt' ){
-      my @keys = @{$self->{options}{$cur->[1]}{keys}};
+      my $o = $self->{options}{$cur->[1]};
+      my @keys = @{$o->{keys}};
       my $s = join '|', @keys;
       $s  = '('.$s.')'       if @keys > 1;
-      $s .= ' '.$cur->[1].'_arg' if defined $self->{options}{$cur->[1]}{type};
+      $s .= ' '.$o->{arg_name} if defined $o->{type};
       $s  = '['.$s.']'       if $cur->[2];
       $ret.= ' '.$s;
     }
@@ -237,7 +237,7 @@ sub m_help_message
     for my $opt (map $self->{options}{$_}, @$gr_cont){
       next if !defined $opt->{descr};
       $ret .= "\t".join(', ', @{$opt->{keys}});
-      $ret .= ' <arg>' if defined $opt->{type};
+      $ret .= " $opt->{arg_name}" if defined $opt->{type};
       $ret .= "\t$opt->{descr}\n";
     }
   }
@@ -353,8 +353,9 @@ sub m_restrictions
 #   $self->{keys}{@keys_of_option} = $option_name
 #   return { keys  => [@keys_of_option],
 #            type  => $type_of_the_first_key,
-#            descr => $opt_value->[1]
-#           (action=> $opt_value->[2] if exists) }
+#            descr => $opt_value->[1],
+#           (action=> $opt_value->[2] if exists),
+#            arg_name => $argument_name }
 # throws: Exceptions::Exception
 sub m_option
 {
@@ -362,16 +363,20 @@ sub m_option
 
   ## unpack $opt_value ##
   $#$opt_value < 0 && throw Exception => "wrong option '$name' specification";
-  my @keys  = split /\s+/, $opt_value->[0];
-  $#keys < 0 && throw Exception => "no keys specified for option '$name'";
+
+  my $val = $opt_value->[0];
 
   ## parse the first key ##
   my $type = undef;
-  if ($keys[0] =~ /(.*?):(.*)/){
-    $keys[0] = $1;
+  my $arg_name = undef;
+  if ($val =~ s/^\s*(\S+?):(\w*)(<(.+)>)?/$1/){
     $type = $2;
+    $arg_name = $4 || '<arg>';
     $self->m_check_type($type);
   }
+
+  my @keys  = split /\s+/, $val;
+  $#keys < 0 && throw Exception => "no keys specified for option '$name'";
 
   ## save the first key for options arrangement ##
   $self->{arrangement}{first_keys}{$keys[0]} = $name;
@@ -389,6 +394,7 @@ sub m_option
     type  => $type,
     descr => ($#$opt_value > 0 ? $opt_value->[1] : ''),
     $#$opt_value > 1 ? (action => $opt_value->[2]) : (),
+    arg_name => $arg_name,
   };
   $ret
 }
@@ -690,8 +696,11 @@ B<SECTIONS:>
     'key' - switch option (no arguments) 'key'.
     'key key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
     'key:' - option with an argument of any type.
+    'key:<ARG_NAME>' - the same, but use ARG_NAME for argument name in help message.
     'key:type' - option with an argument of 'type' type.
     'key:type key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
+    'key:type<ARG_NAME> key_2 key_3' - the same, but use ARG_NAME for argument name
+                                       in help message.
   &action - an subroutine that will be executed on each occurance of the option.
     The first parameter of action subroutine is the argument given for the option.
 
