@@ -121,13 +121,21 @@ sub parse
                         keys %{$self->{use_cases}};
     while (@args){
       my $atom = $self->m_get_atom(\@args);
+
+      ## for error handling ##
+      $self->{parse}{failed_arg_checks} = [];
+
       @wrp_iters = map {
         my $u = $_->[0];
         map [$u, $_], $self->m_fwd_iter($atom, $_->[1])
       } @wrp_iters;
-      @wrp_iters || throw Exception => 'unexpected '.(  $atom->[0] eq 'opt'
-                                                ? "option '$atom->[2]'"
-                                                : "argument '$atom->[1]'");
+      if (!@wrp_iters){
+        my $failed_arg_checks = $self->{parse}{failed_arg_checks};
+        throw List => @$failed_arg_checks if @$failed_arg_checks;
+        throw Exception => 'unexpected '.(  $atom->[0] eq 'opt'
+                                        ? "option '$atom->[2]'"
+                                        : "argument '$atom->[1]'");
+      }
     }
     #TODO: if $#wrp_iters == 0,  say, where it stops.
     # finish with 'end' atom
@@ -592,9 +600,7 @@ sub m_fwd_iter
         }
         elsif($cur->[2] && $@){
           # m_check_arg failed
-          #
-          # INSERT MESSAGE PROCESSING HERE
-          #
+          push @{$self->{parse}{failed_arg_checks}}, $@;
         }
         next if $cur->[3] || ($cur->[4] && $present);
         last;
