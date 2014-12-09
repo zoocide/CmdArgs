@@ -38,6 +38,8 @@ CmdArgs - Parse command line arguments and automate help message creation.
       opt_3  => ['-s'                    , 'silent mode'],
       opt_9  => ['-z'                    , 'Zzz'],
       opt_17 => ['-0 --none --bla-bla'   , '0. simply 0'],
+      verbose=> ['-v' , 'more verbose', sub {$verbose++}],
+      name => ['-n:', 'set a name', sub {$name = $_[0]}],
     },
     restrictions => [
       'opt_1|opt_2|opt_3',
@@ -341,7 +343,8 @@ sub m_restrictions
 #   $self->{keys}{@keys_of_option} = $option_name
 #   return { keys  => [@keys_of_option],
 #            type  => $type_of_the_first_key,
-#            descr => $opt_value->[1] }
+#            descr => $opt_value->[1]
+#           (action=> $opt_value->[2] if exists) }
 # throws: Exceptions::Exception
 sub m_option
 {
@@ -372,6 +375,7 @@ sub m_option
     keys  => [@keys],
     type  => $type,
     descr => ($#$opt_value > 0 ? $opt_value->[1] : ''),
+    $#$opt_value > 1 ? (action => $opt_value->[2]) : (),
   };
   $ret
 }
@@ -485,6 +489,9 @@ sub m_get_atom
         || throw Exception => "wrong parameter '$param' for option '$cur'";
     }
     $self->{parsed}{options}{$opt} = $param;
+    # do action
+    exists $self->{options}{$opt}{action}
+        && &{$self->{options}{$opt}{action}}($param);
     $args->[0] = '-'.$args->[0] if $add_sub;
 
     $opt eq 'HELP'    && throw CmdArgsInfo => $self->m_help_message;
@@ -664,7 +671,7 @@ B<SECTIONS:>
 
 =item options
 
-  options => { opt_name => ['opt_declaration', 'option help message'], ...}
+  options => { opt_name => ['opt_declaration', 'option help message', \&action], ...}
   opt_name - is the user-defined name of the option.
   opt_declaration:
     'key' - switch option (no arguments) 'key'.
@@ -672,6 +679,8 @@ B<SECTIONS:>
     'key:' - option with an argument of any type.
     'key:type' - option with an argument of 'type' type.
     'key:type key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
+  &action - an subroutine that will be executed on each occurance of the option.
+    The first parameter of action subroutine is the argument given for the option.
 
 Options '--help' and '--version' are automatically generated.
 
