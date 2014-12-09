@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 147;
+use Test::More tests => 161;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -212,6 +212,25 @@ eval{
     },
     use_cases => {
       main => ['arg1 arg2...', ''],
+    },
+  );
+  $args->parse;
+};
+ok(!$@);
+isa_ok($args, 'CmdArgs');
+ok(!$args->is_opt('not_existed'));
+is(ref $args->arg('arg2'), 'ARRAY');
+is($args->arg('arg1'), 'arg1');
+ok(eq_array($args->arg('arg2'), [qw(a1 a2 a3)]));
+
+## array and argument ##
+undef $args;
+@ARGV = qw(a1 a2 a3 arg1);
+eval{
+  $args = CmdArgs->declare(
+    '3.0',
+    use_cases => {
+      main => ['arg2... arg1', ''],
     },
   );
   $args->parse;
@@ -739,15 +758,48 @@ eval{
 };
 like("$@", qr/suitable/);
 
-## check parse string ##
+{
+  package CmdArgs::Types::MyStr;
+  sub check{
+    my ($class, $val) = @_;
+    $val eq 'correct_string'
+  }
+}
 
-## --help option ##
+### check parse string ###
 
-## --version option ##
+## select untyped ##
+undef $args;
+eval{
+  $args = CmdArgs->declare(
+    '4.2',
+    use_cases => {
+      second => ['arg2:', 'arg2'],
+      first => ['arg1:MyStr', 'arg1'],
+    },
+  );
+  $args->parse(qw(correct_string_1));
+};
+is("$@", '');
 
-## check help message ##
+## error: 2 variants are suitable ##
+eval{
+  $args->parse(qw(correct_string));
+};
+isnt("$@", '');
 
-## check version message ##
+## --help option and check message ##
+eval{
+  $args->parse(qw(--help));
+};
+isnt("$@", '');
+isa_ok($@, 'Exceptions::CmdArgsInfo');
+like("$@", qr/arg1.*arg2.*arg1.*OPTIONS/s);
 
-### check faults ###
-
+## --version option and check message ##
+eval{
+  $args->parse(qw(--version));
+};
+isnt("$@", '');
+isa_ok($@, 'Exceptions::CmdArgsInfo');
+like("$@", qr/4\.2/);
