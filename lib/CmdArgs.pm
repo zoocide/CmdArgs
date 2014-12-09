@@ -128,9 +128,16 @@ sub parse
         my $u = $_->[0];
         map [$u, $_], $self->m_fwd_iter($atom, $_->[1])
       } @wrp_iters;
+
+      ## handle errors ##
       if (!@wrp_iters){
-        my $failed_arg_checks = $self->{parse}{failed_arg_checks};
-        throw List => @$failed_arg_checks if @$failed_arg_checks;
+        if (@{$self->{parse}{failed_arg_checks}}){
+          my @uniq_errors;
+          for my $e (@{$self->{parse}{failed_arg_checks}}){
+            push @uniq_errors, $e if !grep "$e" eq "$_", @uniq_errors;
+          }
+          throw List => @uniq_errors;
+        }
         throw Exception => 'unexpected '.(  $atom->[0] eq 'opt'
                                         ? "option '$atom->[2]'"
                                         : "argument '$atom->[1]'");
