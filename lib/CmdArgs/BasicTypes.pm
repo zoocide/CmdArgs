@@ -19,6 +19,15 @@ sub check
 }
 
 
+package CmdArgs::Types::NotDir;
+use Exceptions;
+
+sub check
+{
+  !-d $_[1] or throw Exception => "'$_[1]' is a directory."
+}
+
+
 package CmdArgs::Types::Int;
 use Exceptions;
 use Scalar::Util qw(looks_like_number);
@@ -58,6 +67,10 @@ It corresponds to an existing file, which is not a directory.
 =head2 CmdArgs::Types::Dir
 
 It corresponds to an existing directory.
+
+=head2 CmdArgs::Types::NotDir
+
+It corresponds to anything, but an existing directory.
 
 =head2 CmdArgs::Types::Int
 
