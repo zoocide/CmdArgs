@@ -7,7 +7,12 @@ use Exceptions::InternalError;
 
 use Carp;
 
-our $VERSION = '0.2.1';
+our $VERSION = '0.3.0';
+
+## TODO: Add CmdArgs::Types::BasicTypes - a set of useful simple CmdArgs::Types.
+## TODO: Add method 'convert' for types.
+## TODO: Add restrictions.
+## TODO: Arrange options by the first key.
 
 =head1 NAME
 
