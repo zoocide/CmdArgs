@@ -3,4 +3,5 @@ Makefile.PL
 MANIFEST
 README
 t/CmdArgs.t
+t/CmdArgs.0.3.t
 lib/CmdArgs.pm

@@ -1,2 +1,8 @@
 Revision history for Perl extension CmdArgs.
 
+0.3.0:
+  + fixed help and usage messages.
+  + options action
+  + hiden options
+  + arrange use_cases
+  + fixed some bugs
