@@ -39,7 +39,7 @@ CmdArgs - Parse command line arguments and automate help message creation.
       opt_9  => ['-z'                    , 'Zzz'],
       opt_17 => ['-0 --none --bla-bla'   , '0. simply 0'],
       verbose=> ['-v' , 'more verbose', sub {$verbose++}],
-      name => ['-n:', 'set a name', sub {$name = $_[0]}],
+      name => ['-n:', 'set a name', sub {$name = $_}],
     },
     restrictions => [
       'opt_1|opt_2|opt_3',
@@ -538,8 +538,10 @@ sub m_get_atom
     $self->{parsed}{options}{$opt} = $param;
     $self->{parsed}{option_keys}{$opt} = $cur;
     # do action
-    exists $self->{options}{$opt}{action}
-        && &{$self->{options}{$opt}{action}}($param);
+    if (exists $self->{options}{$opt}{action}){
+      local $_ = $param;
+      &{$self->{options}{$opt}{action}}($param);
+    }
     $args->[0] = '-'.$args->[0] if $add_sub;
 
     $opt eq 'HELP'    && throw CmdArgsInfo => $self->m_help_message;
@@ -728,8 +730,11 @@ B<SECTIONS:>
     'key:type key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
     'key:type<ARG_NAME> key_2 key_3' - the same, but use ARG_NAME for argument name
                                        in help message.
-  &action - an subroutine that will be executed on each occurance of the option.
-    The first parameter of action subroutine is the argument given for the option.
+  &action - an action-subroutine.
+
+Action-subroutine will be executed on each occurance of the option.
+Being within action-subroutine you can use given option's argument by accessing
+$_[0] or $_ variables. Their values are identical.
 
 Options '--help' and '--version' are automatically generated.
 
