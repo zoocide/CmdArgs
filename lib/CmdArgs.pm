@@ -495,8 +495,8 @@ sub m_smart_split_by_width
   }
 
   ## decide to cut off broken word from left part ##
-  return ($l, $r) if $r =~ s/^\s+// || $r =~ /^\W/ || $l =~ /\W$/;
-  return ($l, $r) if $l !~ /(\w+)$/ || length $1 >= $max_gap;
+  return ($l, $r) if $r =~ s/^\s+// || $l =~ /\s$/;
+  return ($l, $r) if $l !~ /([^{(\[,\s]+)$/ || length $1 >= $max_gap;
   return ($l, $r) if !$first_line && !$`;
   ($`, $1.$r)
 }
