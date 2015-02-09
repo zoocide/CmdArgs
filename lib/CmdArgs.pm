@@ -10,6 +10,7 @@ use Carp;
 our $VERSION = '0.3.0';
 
 ## TODO: Add method 'convert' for types.
+## TODO: Add tests for 'opt_or_default' method.
 
 =head1 NAME
 
@@ -67,6 +68,11 @@ CmdArgs - Parse command line arguments and automate help message creation.
 
 sub arg { $_[0]{parsed}{args}{$_[1]} }
 sub opt { $_[0]{parsed}{options}{$_[1]} }
+sub opt_or_default
+{
+  exists $_[0]{parsed}{options}{$_[1]} ?
+         $_[0]{parsed}{options}{$_[1]} : $_[2]
+}
 sub is_opt { exists $_[0]{parsed}{options}{$_[1]} }
 sub args { %{$_[0]{parsed}{args}} }
 sub opts { %{$_[0]{parsed}{options}} }
@@ -798,6 +804,11 @@ If argument is specified as 'name...' returns a reference to the array.
 =item opt($name)
 
 Get value of the '$name' option.
+
+=item opt_or_default($name, $default_value)
+
+If option '$name' is specified, this method returns option '$name' value.
+Otherwise, it returns $default_value.
 
 =item is_opt($name)
 
