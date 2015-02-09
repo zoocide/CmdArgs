@@ -11,7 +11,6 @@ use Carp;
 our $VERSION = '0.3.0';
 our @EXPORT_OK = qw(ptext);
 
-## TODO: Add documentation ptext($)
 ## TODO: Add more tests (help and usage! messages).
 ## TODO: Add tests for 'opt_or_default' method.
 ## TODO: Add tests for the new help message customizing system.
@@ -972,11 +971,11 @@ __END__
 
 =over
 
-=item declare($version, section => value, ...)
+=item C<< declare($version, section => value, ...) >>
 
 throws: string
 
-$version is a string, for example, '1.0.1'.
+C<$version> is a string, for example, C<'1.0.1'>.
 
 B<SECTIONS:>
 
@@ -985,114 +984,156 @@ B<SECTIONS:>
 =item options
 
   options => { opt_name => ['opt_declaration', 'option help message', \&action], ...}
-  opt_name - is the user-defined name of the option.
-  opt_declaration:
-    'key' - switch option (no arguments) 'key'.
-    'key key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
-    'key:' - option with an argument of any type.
-    'key:<ARG_NAME>' - the same, but use ARG_NAME for argument name in help message.
-    'key:type' - option with an argument of 'type' type.
-    'key:type key_2 key_3' - the same. 'key', 'key_2', 'key_3' are synonims.
-    'key:type<ARG_NAME> key_2 key_3' - the same, but use ARG_NAME for argument name
-                                       in help message.
-  &action - an action-subroutine.
 
-Action-subroutine will be executed on each occurance of the option.
+I<opt_name> - is the user-defined name of the option.
+I<opt_declaration> examples:
+
+C<'key'> - switch option (no arguments) I<key>.
+
+C<'key key_2 key_3'> - the same. I<key>, I<key_2>, I<key_3> are synonims.
+
+C<'key:'> - option with an argument of any type.
+
+C<< 'key:<ARG_NAME>' >> - the same, but use I<ARG_NAME> for argument
+name in help message.
+
+C<'key:type'> - option with an argument of I<type> type.
+
+C<'key:type key_2 key_3'> - the same. I<key>, I<key_2>, I<key_3> are synonims.
+
+C<< 'key:type<ARG_NAME> key_2 key_3' >> - the same, but use ARG_NAME
+for argument name in help message.
+
+Action-subroutine C<&action> will be executed on each occurance of the option.
 Being within action-subroutine you can use given option's argument by accessing
-$_[0] or $_ variables. Their values are identical.
+C<$_[0]> or C<$_> variables. Their values are identical.
 
 Options '--help' and '--version' are automatically generated.
 
 You can hide an option from the help message,
 by specifying explicit C<undef> value for its description, e.g.:
 
-  options => { hiden_opt => ['--hiden', undef], ... },
+  options => { hiden_opt => ['--hiden', undef], }
 
 =item groups
 
 Named groups of options.
 
-  groups => { group_name => [qw(opt_1 opt_2 ...], ... }
+  groups => { group_name => [qw(opt_1 opt_2 ...)], }
 
-If I<groups> section is missed, by default there is I<OPTIONS> group contained all options.
+If I<groups> section is missed, by default there is I<OPTIONS>
+group contained all options.
 
 =item use_cases
 
 It declares use cases, that is alternate sequences of options and arguments.
 
-  use_cases => { use_case_name => ['atoms_list', 'use case help message'], ... }
+  use_cases => { use_case_name => ['atoms_list', 'use case help message'], }
 
 where:
 
-  'atoms_list' = list of space separated atoms.
-  'atom' = group_name | opt_name | arg_name
-  group_name - means that at this place an options from specified group can appear.
-  opt_name - option 'opt_name' must be placed here.
-  arg_name - an argument named 'arg_name'.
-  arg_name: - an argument with value of any type.
-  arg_name:type - an argument with value of the specified type
-  arg_name... - array of arguments. One or more arguments are permitted.
-  arg_name...? - array of arguments. Zero or more arguments are permitted.
-  arg_name? - optional argument
+C<atoms_list = list of space separated atoms>
+
+C<atom = group_name | opt_name | arg_name>
+
+C<group_name> - means that at this place an options from specified
+group can appear.
+
+C<opt_name> - option I<opt_name> must be placed here.
+
+C<arg_name> - an argument named I<arg_name>.
+
+C<arg_name:> - an argument with value of any type.
+
+C<arg_name:type> - an argument with value of the specified type.
+
+C<arg_name...> - array of arguments. One or more arguments are permitted.
+
+C<arg_name...?> - array of arguments. Zero or more arguments are permitted.
+
+C<arg_name?> - optional argument
 
 To preserve use-cases order you should use [] instead of {}:
 
-  use_cases => [ use_case_name => [ ... ], ... ],
+  use_cases => [ use_case_name => [ ... ], ... ]
 
-If I<use_cases> section is missed, by default there is I<main> use case declared as C<['OPTIONS args...', '']>.
+If I<use_cases> section is missed, by default there is I<main>
+use case declared as C<['OPTIONS args...', '']>.
 
 =item restrictions
 
-  restrictions => ['opt_1|opt_2|opt_3', ...]
+  restrictions => ['opt_1|opt_2|opt_3', 'opt_4|opt_1', ... ]
 
-That is, opt_1, opt_2 and opt_3 can not appear simultaneously.
+That is, I<opt_1>, I<opt_2> and I<opt_3> can not appear simultaneously.
+And I<opt_4> and I<opt_1> also can not appear simultaneously.
 
 =back
 
-=item parse($string)
+=item C<parse($string)>
 
-throws: Exceptions::List
+throws: C<Exceptions::List>
 
-Parse $string or @ARGV array if $string is not specified.
+Parse C<$string> or C<@ARGV> array if C<$string> is not specified.
 
-=item arg($name)
+=item C<arg($name)>
 
-Get argument with name '$name'.
-If argument is specified as 'name...' returns a reference to the array.
+Get argument with name C<$name>.
+If argument is specified as C<name...> returns a reference to the array.
 
-=item opt($name)
+=item C<opt($name)>
 
-Get value of the '$name' option.
+Get value of the C<$name> option.
 
-=item opt_or_default($name, $default_value)
+=item C<opt_or_default($name, $default_value)>
 
-If option '$name' is specified, this method returns option '$name' value.
-Otherwise, it returns $default_value.
+If option C<$name> is specified, this method returns option C<$name> value.
+Otherwise, it returns C<$default_value>.
 
-=item is_opt($name)
+=item C<is_opt($name)>
 
-Check whether the '$name' option is appeared.
+Check whether the C<$name> option is appeared.
 
-=item args
+=item C<args>
 
-Returns a hash contained all parsed arguments.
+It returns a hash contained all parsed arguments.
 
-=item opts
+=item C<opts>
 
 Return a hash contained all parsed options.
 
-=item use_case
+=item C<use_case>
 
 Return name of parsed use case.
+
+=back
+
+=head1 EXPORT
+
+By default it exports nothing. You may explicitly import folowing:
+
+=over
+
+=item C<ptext($text)>
+
+It removes every single end of line from C<$text> and returns result.
+So you can write something like that:
+
+  use_cases => [ main => ['OPTIONS args...', ptext <<EOF] ],
+  A long
+   description
+   with invisible line breaks.
+
+  New paragraph.
+  EOF
 
 =back
 
 =head1 TYPES
 
 To declare a new type, a corresponding package should be defined.
-To define 'MyType' there should be package named 'CmdArgs::Types::MyType',
-that contains subroutine 'check'.
-Subroutine 'check' must validate argument by returning positive boolean value.
+To define I<MyType> there should be package named C<CmdArgs::Types::MyType>,
+that contains subroutine C<check>.
+Subroutine C<check> must validate argument by returning positive boolean value.
 For example:
 
   {
