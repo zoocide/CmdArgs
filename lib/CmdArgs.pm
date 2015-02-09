@@ -9,8 +9,10 @@ use Carp;
 
 our $VERSION = '0.3.0';
 
-## TODO: Add method 'convert' for types.
+## TODO: Add more tests (help and usage! messages).
 ## TODO: Add tests for 'opt_or_default' method.
+## TODO: Add tests for the new help message customizing system.
+## TODO: Add documentation for the new help message customizing system.
 
 =head1 NAME
 
@@ -188,7 +190,161 @@ sub print_version
   print $self->m_version_message;
 }
 
+# $args->set_help_params(
+#   key_indent => $key_indent,
+#   line_indent => $line_indent,
+#   opt_descr_indent => $opt_descr_indent,
+#   kd_min_space => $kd_min_space,
+#   max_gap => $max_gap
+# );
+sub set_help_params($%)
+{
+  my ($self, %p) = @_;
+  my @vkeys = keys %{$self->{help}{params}};
+  for my $k (keys %p){
+    grep $k eq $_, @vkeys or croak "invalid parameter '$k'";
+    $self->{help}{params}{$k} = $p{$k};
+  }
+}
 
+# my %params = $args->get_help_params;
+sub get_help_params
+{
+  my $self = shift;
+  (%{$self->{help}{params}})
+}
+
+# $msg = $args->usage_custom_usecases(['usecase', 'scheme', 'descr'],...);
+sub usage_custom_usecases
+{
+  my ($self, @ucs) = @_;
+  my $ret = "usage:\n";
+  if (@ucs > 1){
+    my $i = 1;
+    $ret .= join '', map '  '.($i++).": $_->[1]\n", @ucs;
+  }
+  else{
+    $ret .= "  $ucs[0][1]\n";
+  }
+  $ret .= "Try --help option for help.\n";
+  $ret
+}
+
+# $msg = $args->help_custom_usecases(['usecase', 'scheme', 'descr'],...);
+sub help_custom_usecases
+{
+  my ($self, @ucs) = @_;
+  my $max_gap = $self->{help}{params}{max_gap};
+  my $w = $self->{terminal}{w};
+
+  my $ret = "usage:\n";
+  if (@ucs > 1){
+    my $i = 1;
+    my $d;
+    for (@ucs){
+      $ret .= "  $i: $_->[1]\n";
+
+      my $p = "$i: ";
+      $d .= $p.m_format_text($_->[2], $w-1-length($p), 2, $w-3, $max_gap)."\n";
+      $i++;
+    }
+    $ret.=$d;
+  }
+  else{
+    $ret .= "  $ucs[0][1]\n";
+    $ret .= m_format_text($ucs[0][2], $w-1, 0, $w-1, $max_gap)."\n";
+  }
+  $ret."\n"
+}
+
+# @group_names = $args->help_custom_groups_filter(@group_names);
+sub help_custom_groups_filter
+{
+  shift;
+  @_
+}
+
+# $msg.= $args->help_custom_group('group_name');
+sub help_custom_group_name
+{
+  my ($self, $group_name) = @_;
+  "$group_name:\n"
+}
+
+# $opt_names = $args->help_custom_options_filter('group_name', @opt_names);
+sub help_custom_options_filter
+{
+  my $self = shift;
+  my $gr = shift;
+  @_
+}
+
+# $msg.= $args->help_custom_option(
+#     'opt', [@keys], 'arg_type', 'arg_name', 'descr');
+sub help_custom_option
+{
+  my ($self, $opt_name, $keys, $type, $arg, $descr) = @_;
+  my ($kpos, $fl_shift, $dpos, $mdist, $max_gap) =
+    @{$self->{help}{params}}{qw(
+      key_indent line_indent opt_descr_indent kd_min_space max_gap
+    )};
+  my ($w, $h) = @{$self->{terminal}}{qw(w h)};
+  return '' if !defined $descr;
+  my $ret = ' ' x $kpos;
+  $ret .= join ', ', @$keys;
+  $ret .= " $arg" if defined $type;
+  return $ret if !$descr;
+
+  ## finish current line ##
+  $dpos += $fl_shift;
+  my $l = (length($ret) + $mdist) % $w;
+  if ($l < $dpos){
+    $ret .= ' ' x ($dpos - $l);
+    $l = $dpos;
+  }
+  my $n = $w - 1 - $l;
+  $descr =~ s/\t/ /g;
+  my @lines = split /\n/, $descr;
+  my ($lf, $rt) = m_smart_split_by_width($lines[0], $n, $max_gap, 1);
+  $ret .= (' ' x $mdist)."$lf\n";
+  $lines[0] = $rt;
+
+  ## process next lines ##
+  $dpos -= $fl_shift;
+  my @strs;
+  for my $line (@lines){
+    while ($line){
+      ($lf, $line) = m_smart_split_by_width($line, $w-1-$dpos, $max_gap, 0);
+      push @strs, $lf;
+    }
+  }
+  $ret .= (' ' x $dpos)."$_\n" for @strs;
+  $ret
+}
+
+
+
+sub m_update_terminal_info
+{
+  my $self = shift;
+  my $min_w = $self->{help}{params}{opt_descr_indent} + 5;
+  my @default_size = (80 < $min_w ? $$min_w : 80, 24);
+  my $f; #< get rid from GetTerminalSize() messages
+  eval{
+    require Term::ReadKey;
+    require File::Spec;
+    open STDERR, '>', File::Spec->devnull if open $f, '>&STDERR';
+    my ($w, $h) = Term::ReadKey::GetTerminalSize();
+    @{$self->{terminal}}{qw(w h)} = $w <= $min_w ? @default_size : ($w, $h);
+  };
+  if ($@){
+    @{$self->{terminal}}{qw(w h)} = @default_size;
+  }
+  if (defined $f){
+    open STDERR, '>&', $f;
+    close $f;
+  }
+}
 
 sub m_use_case_msg
 {
@@ -218,47 +374,116 @@ sub m_use_case_msg
   $ret
 }
 
-sub m_usage_message
+sub m_usecases_to_str
 {
-  my $self = shift;
-  my $ret = "usage:\n";
+  my ($self, $method) = @_;
   my @uc_names = exists $self->{arrangement}{use_cases}
                ? @{$self->{arrangement}{use_cases}}
                : keys %{$self->{use_cases}};
-  for my $uc_name (@uc_names){
-    $ret .= '  '.$self->m_use_case_msg($self->{use_cases}{$uc_name})."\n";
-  }
-  $ret .= "Try --help option for help.\n";
-  $ret
+  $self->$method(
+    map {
+      my $name = $_;
+      my $uc = $self->{use_cases}{$name};
+      [$name, $self->m_use_case_msg($uc), $uc->{descr}]
+    } @uc_names
+  )
+}
+
+sub m_usage_message
+{
+  my $self = shift;
+  $self->m_usecases_to_str('usage_custom_usecases');
 }
 
 sub m_help_message
 {
   my $self = shift;
-  my $ret = "usage:\n";
-  my @uc_names = exists $self->{arrangement}{use_cases}
-               ? @{$self->{arrangement}{use_cases}}
-               : keys %{$self->{use_cases}};
-  my @ucs = map $self->{use_cases}{$_}, @uc_names;
-  if (@ucs == 1){
-    # do not print number before use case
-    $ret .= '  '.$self->m_use_case_msg($ucs[0])."\n";
-    $ret .= "$ucs[0]{descr}\n";
-  }
-  else{
-    $ret .= join '', map '  '.($_+1).': '.$self->m_use_case_msg($ucs[$_])."\n", 0..$#ucs;
-    $ret .= join '', map +($_+1).": $ucs[$_]{descr}\n", 0..$#ucs;
-  }
-  while (my ($gr_name, $gr_cont) = each %{$self->{groups}}){
-    $ret .= "$gr_name:\n";
-    for my $opt (map $self->{options}{$_}, @$gr_cont){
-      next if !defined $opt->{descr};
-      $ret .= "\t".join(', ', @{$opt->{keys}});
-      $ret .= " $opt->{arg_name}" if defined $opt->{type};
-      $ret .= "\t$opt->{descr}\n";
+  $self->m_update_terminal_info;
+  my $ret = $self->m_usecases_to_str('help_custom_usecases');
+  my @gr_names = $self->help_custom_groups_filter(keys %{$self->{groups}});
+  for my $gr (@gr_names){
+    $ret .= $self->help_custom_group_name($gr);
+    my @opt_names = $self->help_custom_options_filter(
+      $gr, @{$self->{groups}{$gr}}
+    );
+    for my $opt_name (@opt_names){
+      my $opt = $self->{options}{$opt_name};
+      $ret .= $self->help_custom_option(
+        $opt_name,
+        $opt->{keys},
+        $opt->{type},
+        $opt->{arg_name},
+        $opt->{descr}
+      );
     }
   }
   $ret
+}
+
+# my $formatted_text = m_format_text(
+#   $text, $fl_width, $body_indent, $width, $max_gap);
+sub m_format_text
+{
+  my ($text, $flw, $ind, $w, $max_gap) = @_;
+  my @lines = m_split_text($text, $flw, $w, $max_gap);
+  my $ret = shift @lines;
+  my $sh = $ind > 0 ? ' ' x $ind : '';
+  $ret .= join '', map "\n$sh".$_, @lines;
+  $ret
+}
+
+# my @lines = m_split_text($text, $fl_width, $width, $max_gap);
+sub m_split_text
+{
+  my ($text, $flw, $w, $max_gap) = @_;
+  my @ret;
+
+  $text =~ s/\t/ /g;
+  my @lines = split /\n/, $text;
+  return @ret if !@lines;
+
+  ## process first line ##
+  my ($lf, $rt) = m_smart_split_by_width($lines[0], $flw, $max_gap, 1);
+  push @ret, $lf;
+  $lines[0] = $rt;
+
+  ## process next lines ##
+  for my $line (@lines){
+    while ($line){
+      ($lf, $line) = m_smart_split_by_width($line, $w, $max_gap, 0);
+      push @ret, $lf;
+    }
+  }
+  @ret
+}
+
+# my ($left_part, $right_part) = m_smart_split_by_width(
+#   $str, $width, $max_gap, $first_line);
+sub m_smart_split_by_width
+{
+  my ($str, $w, $max_gap, $first_line) = @_;
+  return ($str, '') if !$str || length $str <= $w;
+  return ('', $str) if $w <= 0;
+
+  ## $str = $l . $r ##
+  my $l = substr $str, 0, $w;
+  my $r = substr $str, $w;
+
+  ## process "empty" left part ##
+  if ($l =~ /^\s*$/){
+    return ('', $str) if $first_line;
+    do{
+      return ($r, '') if length $r <= $w;
+      $l = substr $r, 0, $w;
+      $r = substr $r, $w;
+    } while($l && $l =~ /^\s*$/);
+  }
+
+  ## decide to cut off broken word from left part ##
+  return ($l, $r) if $r =~ s/^\s+// || $r =~ /^\W/ || $l =~ /\W$/;
+  return ($l, $r) if $l !~ /(\w+)$/ || length $1 >= $max_gap;
+  return ($l, $r) if !$first_line && !$`;
+  ($`, $1.$r)
 }
 
 sub m_version_message
@@ -273,8 +498,8 @@ sub m_init_defaults
   my $self = shift;
   $self->{keys}{'--help'}    = 'HELP';
   $self->{keys}{'--version'} = 'VERSION';
-  $self->{options}{HELP}    = { keys  => ['--help'   ], type  => undef, descr => 'print help' };
-  $self->{options}{VERSION} = { keys  => ['--version'], type  => undef, descr => 'print version' };
+  $self->{options}{HELP}    = { keys  => ['--help'   ], type  => undef, descr => 'Print help.' };
+  $self->{options}{VERSION} = { keys  => ['--version'], type  => undef, descr => 'Print version.' };
   $self->{groups}{OPTIONS}  = [qw(HELP VERSION)];
   $self->{arrangement}{first_keys}{'--help'} = 'HELP';
   $self->{arrangement}{first_keys}{'--version'} = 'VERSION';
@@ -283,6 +508,11 @@ sub m_init_defaults
                                            [['arg','args','','','...'],
                                            []]],
                                descr => ''};
+  $self->{help}{params}{key_indent} = 2;
+  $self->{help}{params}{line_indent} = 0;
+  $self->{help}{params}{opt_descr_indent} = 13 + 4;
+  $self->{help}{params}{kd_min_space} = 4;
+  $self->{help}{params}{max_gap} = 15;
 }
 
 # throws: Exceptions::Exception
