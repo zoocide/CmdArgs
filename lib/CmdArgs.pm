@@ -22,49 +22,64 @@ CmdArgs - Parse command line arguments and automate help message creation.
 
   use CmdArgs;
 
+  ## simple expamle ##
+  my $args = CmdArgs->declare(
+    '0.1.0',
+    use_cases => { main => ['OPTIONS my_arg', 'Description...'] },
+    options => { verbose => ['-v --verbose', 'Print more information.'], }
+  );
+  $args->parse;
+
+  my $verb = $args->is_opt('verbose');
+  my $arg = $args->arg('my_arg');
+
+  ========================================
+  ## Main capabilities ##
+  use CmdArgs;
+  use CmdArgs::BasicTypes;
+
   {package CmdArgs::Types::Filename; sub check{my $arg = $_[1]; -f $arg}}
 
   my $args = CmdArgs->declare(
     $version,
-    ## You can use [] instead of {} if use_cases order is important ##
-    use_cases => { ##< 'main' is the default use case: ['OPTIONS args...', '']
-      main   => ['OPTIONS arg1:Filename arg2:Testset', 'the main use case'],
-      second => ['OPTS_GROUP_1 arg_1 OPTS_GROUP_2 arg_2', 'the second usage'],
-    },
-    groups => { ##< 'OPTIONS' is the default group contained all options
-      OPTS_GROUP_1 => [qw(opt_1 opt_2 opt_3)],
+    use_cases => [
+      main   => ['OPTIONS arg1:Filename arg2:Int', 'The main use case.'],
+      second => ['OPTS_GROUP_1 arg_1:Dir OPTS_GROUP_2 arg_2...?', 'The second usage.'],
+    ],
+    groups => {
+      OPTS_GROUP_1 => [qw(opt_1 opt_2 silent)],
       OPTS_GROUP_2 => [qw(opt_9 opt_17)],
+      OPTIONS => [qw(name verbose silent)],
     },
     options => {
       opt_1  => ['-f:Filename --filename', 'specify filename'],
       opt_2  => ['-i:<FILE> --input'     , 'read input from FILE'],
-      opt_3  => ['-s'                    , 'silent mode'],
+      silent => ['-s'                    , 'silent mode'],
       opt_9  => ['-z'                    , 'Zzz'],
       opt_17 => ['-0 --none --bla-bla'   , '0. simply 0'],
       verbose=> ['-v' , 'more verbose', sub {$verbose++}],
       name => ['-n:', 'set a name', sub {$name = $_}],
     },
     restrictions => [
-      'opt_1|opt_2|opt_3',
-      'opt_1|opt_4',
+      'verbose|opt_9|silent',
+      'opt_2|opt_9',
     ]
   );
 
   $args->parse;
-
-  ===========================
-
+  ## or ##
   $args->parse('string args');
 
-  ===========================
-
-  ## simple expamle ##
-  my $args = CmdArgs->declare(
-    '0.1.0',
-    use_cases => { main => ['OPTIONS arg', 'description...'] },
-    options => { verbose => ['-v --verbose', 'print more information'], }
-  );
-  $args->parse;
+  if ($args->use_case eq 'main'){
+    my $arg1 = $args->arg('arg1');
+    my $silent = $args->is_opt('silent');
+    my $name = $args->opt_or_default('name', 'default_name');
+  }
+  if ($args->use_case eq 'second'){
+    my @arg2 = @{ $args->arg('arg_2') };
+    my $f = 'my_filename';
+    $f = $args->opt('opt_1') if $args->is_opt('opt_1');
+  }
 
 =cut
 
@@ -1074,6 +1089,64 @@ For example:
       -f $arg or die "'$arg' is not a file\n"
     }
   }
+
+=head1 EXAMPLE
+
+  #!/usr/bin/perl -w
+  use strict;
+  use CmdArgs;
+  use CmdArgs::BasicTypes;
+
+  # Declare type to fail, when not existing files are specified as source files.
+  {
+    package CmdArgs::Types::EPath;
+    sub check { -e $_[1] or die "file '$_[1]' does not exist\n" }
+  }
+
+  my $verb = 0; #< used as verbose level
+
+  my $args = CmdArgs->declare(
+    '1.0',
+    use_cases => [
+      single => ['OPTIONS file1:EPath file2:NotDir', 'Copy one file to another.'],
+      multi  => ['OPTIONS files:EPath... dest_dir:Dir', 'Copy files to directory.'],
+    ],
+    options => {
+      recursive => ['-r --recursive', 'Copy directories recursively.'],
+      force => ['-f --force', 'Force copying.'],
+      log_level => ['--log_level:Int<<level>>', 'Set log_level to <level>.'],
+      verbose => ['-v --verbose', 'More verbose. -vv even more.', sub { $verb++ } ],
+    },
+  );
+
+  # Set parameters to customize help message.
+  $args->set_help_params(key_indent => 4, opt_descr_indent => 25, kd_min_space => 2);
+
+  # When $args->parse fails, it will die with help message.
+  $args->parse;
+
+  ## print information on verbose level 2 ##
+  if ($verb > 1){
+    printf "log_level = %i\n", $args->opt_or_default('log_level', 3);
+    $args->is_opt('force')     && print "Force copy.\n";
+    $args->is_opt('recursive') && print "Copy directories recursively.\n";
+  }
+
+  # This script actually does nothing, just prints messages instead of real copying.
+  if ($args->use_case eq 'single'){
+    ## copy one file to another ##
+    my $file1 = $args->arg('file1');
+    my $file2 = $args->arg('file2');
+    print "copy '$file1' to '$file2'\n" if $verb > 0;
+  }
+  else {
+    ## copy files to directory ##
+    my @files = @{ $args->arg('files') };
+    my $dir = $args->arg('dest_dir');
+    print "copy:\n", map("  $_\n", @files), "to directory '$dir'\n" if $verb >0;
+  }
+  print "done\n";
+
 
 =head1 AUTHOR
 
