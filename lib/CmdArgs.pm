@@ -2,13 +2,16 @@ package CmdArgs;
 use 5.00008;
 use strict;
 use warnings;
+use parent qw(Exporter);
 use Exceptions;
 use Exceptions::InternalError;
 
 use Carp;
 
 our $VERSION = '0.3.0';
+our @EXPORT_OK = qw(ptext);
 
+## TODO: Add documentation ptext($)
 ## TODO: Add more tests (help and usage! messages).
 ## TODO: Add tests for 'opt_or_default' method.
 ## TODO: Add tests for the new help message customizing system.
@@ -82,6 +85,17 @@ CmdArgs - Parse command line arguments and automate help message creation.
   }
 
 =cut
+
+###### PUBLIC FUNCTIONS ######
+
+# my $plain_text = ptext $text;
+sub ptext($)
+{
+  my $s=shift;
+  $s =~ s/\n(\s*(\n(\s*\n)*))?/$2||''/ge;
+  $s
+}
+##############################
 
 sub arg { $_[0]{parsed}{args}{$_[1]} }
 sub opt { $_[0]{parsed}{options}{$_[1]} }
