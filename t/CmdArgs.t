@@ -794,7 +794,7 @@ eval{
 };
 isnt("$@", '');
 isa_ok($@, 'Exceptions::CmdArgsInfo');
-like("$@", qr/arg1.*arg2.*arg1.*OPTIONS/s);
+like("$@", qr/arg1.*arg2.*arg1.*ABOUT/s);
 
 ## --version option and check message ##
 eval{

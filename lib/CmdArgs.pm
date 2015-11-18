@@ -23,6 +23,8 @@ our @EXPORT_OK = qw(ptext);
 ## TODO:+groups: add default group ABOUT
 ## TODO: options: update documentation
 ## TODO:+options: allow to specify variables references instead of subroutines.
+## TODO: allow to have '-parameter'
+## TODO: allow to specify '--filename=filename'
 
 =head1 NAME
 

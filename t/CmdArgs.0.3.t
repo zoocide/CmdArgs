@@ -43,8 +43,8 @@ eval{
 };
 isnt("$@", '');
 isa_ok($@, 'Exceptions::CmdArgsInfo');
-like  ("$@", qr/arg2.*arg1.*arg2.*arg1.*OPTIONS/s);
-unlike("$@", qr/arg1.*arg2.*arg1.*arg2.*OPTIONS/s);
+like  ("$@", qr/arg2.*arg1.*arg2.*arg1.*ABOUT/s);
+unlike("$@", qr/arg1.*arg2.*arg1.*arg2.*ABOUT/s);
 
 ## help order preservation 2 ##
 eval{
@@ -59,8 +59,8 @@ eval{
 };
 isnt("$@", '');
 isa_ok($@, 'Exceptions::CmdArgsInfo');
-like  ("$@", qr/arg1.*arg2.*arg1.*arg2.*OPTIONS/s);
-unlike("$@", qr/arg2.*arg1.*arg2.*arg1.*OPTIONS/s);
+like  ("$@", qr/arg1.*arg2.*arg1.*arg2.*ABOUT/s);
+unlike("$@", qr/arg2.*arg1.*arg2.*arg1.*ABOUT/s);
 
 ## hiden options ##
 eval{
