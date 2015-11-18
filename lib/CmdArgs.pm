@@ -16,6 +16,7 @@ our @EXPORT_OK = qw(ptext);
 ## TODO: Add tests for the new help message customizing system.
 ## TODO: Add documentation for the new help message customizing system.
 ## TODO:+groups: make _GROUPS not appearing in help message.
+## TODO:+groups: add default group ABOUT
 
 =head1 NAME
 
@@ -530,7 +531,7 @@ sub m_init_defaults
   $self->{keys}{'--version'} = 'VERSION';
   $self->{options}{HELP}    = { keys  => ['--help'   ], type  => undef, descr => 'Print help.' };
   $self->{options}{VERSION} = { keys  => ['--version'], type  => undef, descr => 'Print version.' };
-  $self->{groups}{OPTIONS}  = [qw(HELP VERSION)];
+  $self->{groups}{ABOUT}    = [qw(HELP VERSION)];
   $self->{arrangement}{first_keys}{'--help'} = 'HELP';
   $self->{arrangement}{first_keys}{'--version'} = 'VERSION';
   $self->{use_cases}{main} = { use_case => 'OPTIONS args...',
@@ -558,7 +559,8 @@ sub m_options
 
   ## arrange options by the first key ##
   my @fkeys = sort keys %{$self->{arrangement}{first_keys}};
-  @{$self->{groups}{OPTIONS}} = map $self->{arrangement}{first_keys}{$_}, @fkeys;
+  @{$self->{groups}{OPTIONS}} = grep $_ ne 'HELP' && $_ ne 'VERSION',
+      map $self->{arrangement}{first_keys}{$_}, @fkeys;
 }
 
 # throws: Exceptions::Exception
