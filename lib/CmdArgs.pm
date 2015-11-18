@@ -331,7 +331,7 @@ sub help_custom_option
   my $ret = ' ' x $kpos;
   $ret .= join ', ', @$keys;
   $ret .= " $arg" if defined $type;
-  return $ret if !$descr;
+  $descr ||= '<no description>';
 
   ## finish current line ##
   $dpos += $fl_shift;
