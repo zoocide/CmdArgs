@@ -17,6 +17,8 @@ our @EXPORT_OK = qw(ptext);
 ## TODO: Add documentation for the new help message customizing system.
 ## TODO:+groups: make _GROUPS not appearing in help message.
 ## TODO:+groups: add default group ABOUT
+## TODO: options: update documentation
+## TODO:+options: allow to specify variables references instead of subroutines.
 
 =head1 NAME
 
@@ -674,12 +676,28 @@ sub m_option
     $self->{keys}{$_} = $name;
   }
 
+  ## define action ##
+  my @action;
+  if ($#$opt_value > 1 && defined $opt_value->[2]){
+    my $p = $opt_value->[2];
+    my $a = $p;
+    ref $p or throw Exception => "wrong action specified for option '$name'";
+
+    if (ref $p eq 'SCALAR'){
+      $a = sub { $$p = $_[0] };
+    }
+    elsif (ref $p eq 'ARRAY'){
+      $a = sub { push @$p, $_[0] }
+    }
+    @action = (action => $a);
+  }
+
   ## return new option ##
   my $ret = {
     keys  => [@keys],
     type  => $type,
     descr => ($#$opt_value > 0 ? $opt_value->[1] : ''),
-    $#$opt_value > 1 ? (action => $opt_value->[2]) : (),
+    @action,
     arg_name => $arg_name,
   };
   $ret
