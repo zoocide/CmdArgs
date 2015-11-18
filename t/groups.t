@@ -131,8 +131,7 @@ eval{
 };
 is("$@", '');
 #print Dumper($args->{groups});
-is_deeply($args->{groups}, {%ghelp, GR1 => [grep $_ ne 'HELP' && $_ ne 'VERSION',
-                                            keys %{$args->{options}}]});
+is_deeply($args->{groups}, {%ghelp, GR1 => [qw(opt1 opt2 opt3)]});
 undef $args;
 
 ## _GROUP should not appear in help message ##

@@ -566,9 +566,9 @@ sub m_options
   }
 
   ## arrange options by the first key ##
-  my @fkeys = sort keys %{$self->{arrangement}{first_keys}};
+  my $fks = $self->{arrangement}{first_keys};
   @{$self->{groups}{OPTIONS}} = grep $_ ne 'HELP' && $_ ne 'VERSION',
-      map $self->{arrangement}{first_keys}{$_}, @fkeys;
+      map $fks->{$_}, sort keys %$fks;
 }
 
 # throws: Exceptions::Exception
@@ -614,7 +614,10 @@ sub m_groups
     for my $name (@$gr){
       my $to_del = ($name =~ s/^\^//);
       if ($name eq '*'){
-        &$modify_gr($gr_name, $to_del, keys %{$self->{options}});
+        # sort all options by the first key
+        my $fks = $self->{arrangement}{first_keys};
+        my @opts = map $fks->{$_}, sort keys %$fks;
+        &$modify_gr($gr_name, $to_del, @opts);
       }
       elsif (exists $self->{options}{$name}){
         &$modify_gr($gr_name, $to_del, $name);
