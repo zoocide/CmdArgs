@@ -15,6 +15,10 @@ our @EXPORT_OK = qw(ptext);
 ## TODO: Add tests for 'opt_or_default' method.
 ## TODO: Add tests for the new help message customizing system.
 ## TODO: Add documentation for the new help message customizing system.
+## TODO: groups: update documentation
+## TODO:+groups: add * to include all options
+## TODO:+groups: allow to include whole groups, by specifying its name.
+## TODO:+groups: add ^ exculde mark
 ## TODO:+groups: make _GROUPS not appearing in help message.
 ## TODO:+groups: add default group ABOUT
 ## TODO: options: update documentation
@@ -573,18 +577,65 @@ sub m_groups
   ## check correctness of the specification ##
   ref $groups eq 'HASH' || throw Exception => 'wrong groups specification: hash should be used';
 
-  while (my ($name, $opts) = each %$groups){
-    ref $opts eq 'ARRAY' || throw Exception => "worng group '$name' specification: "
-                                              .'group is an array of options';
+  delete $self->{groups}{OPTIONS};
+  my %grs = (%{$self->{groups}}, %$groups);
+  $self->{groups} = {};
 
-    foreach (@$opts){
-      exists $self->{options}{$_}
-        || throw Exception => "unknown option '$_' specified for group '$name'";
+  my $modify_gr = sub{
+    my ($gr_name, $op_del, @opts) = @_;
+    if ($op_del){
+      @{$self->{groups}{$gr_name}} = grep {
+        my $opt = $_; !grep $opt eq $_, @opts
+      } @{$self->{groups}{$gr_name}};
     }
-  }
+    else {
+      for my $opt (@opts){
+        next if grep $opt eq $_, @{$self->{groups}{$gr_name}};
+        push @{$self->{groups}{$gr_name}}, $opt;
+      }
+    }
+  };
 
-  ## add groups ##
-  $self->{groups} = $groups;
+  my @working_on;
+
+  my $process_gr;
+  $process_gr = sub{
+    my $gr_name = shift;
+    my $gr = $grs{$gr_name};
+
+    delete $grs{$gr_name};
+    push @working_on, $gr_name;
+
+    ref $gr eq 'ARRAY' || throw Exception => "worng group '$gr_name' specification:"
+                                           .' group must be an array of options';
+
+    for my $name (@$gr){
+      my $to_del = ($name =~ s/^\^//);
+      if ($name eq '*'){
+        &$modify_gr($gr_name, $to_del, keys %{$self->{options}});
+      }
+      elsif (exists $self->{options}{$name}){
+        &$modify_gr($gr_name, $to_del, $name);
+      }
+      elsif (exists $grs{$name}){
+        &$process_gr($name);
+        &$modify_gr($gr_name, $to_del, @{$self->{groups}{$name}});
+      }
+      elsif (grep $name eq $_, @working_on){
+        throw Exception => 'cyclic references detected ('
+                         .join('-', @working_on, $name).')';
+      }
+      elsif (exists $self->{groups}{$name}){
+        &$modify_gr($gr_name, $to_del, @{$self->{groups}{$name}});
+      }
+      else {
+        throw Exception => "unknown option '$name' specified for group '$gr_name'";
+      }
+    }
+    pop @working_on;
+  };
+
+  &$process_gr((keys %grs)[0]) while %grs;
 }
 
 # throws: Exceptions::Exception
