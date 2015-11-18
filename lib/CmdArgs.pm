@@ -24,7 +24,7 @@ our @EXPORT_OK = qw(ptext);
 ## TODO: options: update documentation
 ## TODO:+options: allow to specify variables references instead of subroutines.
 ## TODO:+allow to have '-parameter'
-## TODO: allow to specify '--filename=filename'
+## TODO:+allow to specify '--filename=filename'
 
 =head1 NAME
 
@@ -784,7 +784,7 @@ sub m_option
 
   ## check all keys ##
   foreach (@keys){
-    /[^\w_-]/ && throw Exception => "worong option '$name' specification: '$_'";
+    /[^\w_=-]/ && throw Exception => "worong option '$name' specification: '$_'";
     exists $self->{keys}{$_} && throw Exception => "key '$_' duplicate";
     $self->{keys}{$_} = $name;
 
@@ -897,6 +897,12 @@ sub m_get_atom
 
   @$args || return 0;
   my $cur = shift @$args;
+
+  # parse 'option=value' case
+  if (!$self->{options_end} && $cur =~ /^(.+?)=(.*)/ && exists $self->{keys}{$1}){
+    $cur = $1;
+    unshift @$args, $2;
+  }
 
   if (!$self->{options_end} && (substr($cur,0,1) eq '-' || exists $self->{keys}{$cur}))
   {

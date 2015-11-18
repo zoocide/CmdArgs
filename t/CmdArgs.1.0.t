@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 53;
+use Test::More tests => 61;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -60,6 +60,32 @@ eval{
 is("$@", '');
 ok(eval{ $args->is_opt('a') });
 ok(eval{ $args->is_opt('b') });
+
+### set option form "-o=value" ###
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { a => ['-a:'], b => ['-l'], },
+  );
+  $args->parse('-la=value arg');
+};
+is("$@", '');
+ok(eval{ $args->is_opt('a') });
+ok(eval{ $args->is_opt('b') });
+is(eval{ $args->opt('a') }, 'value');
+
+### set option form "-long=value" ###
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { a => ['-long:'], b => ['-l'], },
+  );
+  $args->parse('-l -long=value arg');
+};
+is("$@", '');
+ok(eval{ $args->is_opt('a') });
+ok(eval{ $args->is_opt('b') });
+is(eval{ $args->opt('a') }, 'value');
 
 ### named options argument ###
 
