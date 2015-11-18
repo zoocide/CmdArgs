@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 44;
+use Test::More tests => 53;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -22,6 +22,44 @@ my $args;
   package CmdArgs::Types::Word_ok;
   sub check { my ($class, $val) = @_; $val eq 'ok' }
 }
+
+### splitting one char options ###
+
+## options like '-long-option' ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { a => ['-long-option'], b => ['-l'], },
+  );
+  $args->parse('-long-option -l arg');
+};
+is("$@", '');
+ok(eval{ $args->is_opt('a') });
+ok(eval{ $args->is_opt('b') });
+
+## options like '-op' ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { a => ['-lo'], b => ['-l'], },
+  );
+  $args->parse('-lo -l arg');
+};
+is("$@", '');
+ok(eval{ $args->is_opt('a') });
+ok(eval{ $args->is_opt('b') });
+
+## split one char options ##
+eval{
+  $args = CmdArgs->declare(
+    '1.0',
+    options => { a => ['-a'], b => ['-l'], },
+  );
+  $args->parse('-la arg');
+};
+is("$@", '');
+ok(eval{ $args->is_opt('a') });
+ok(eval{ $args->is_opt('b') });
 
 ### named options argument ###
 
@@ -160,5 +198,3 @@ is("$@", '');
 is(eval{ $args->arg('n') }, -1.2);
 eval{ $args->parse('not_a_number') };
 isnt("$@", '');
-
-## convert method of Types ##

@@ -23,7 +23,7 @@ our @EXPORT_OK = qw(ptext);
 ## TODO:+groups: add default group ABOUT
 ## TODO: options: update documentation
 ## TODO:+options: allow to specify variables references instead of subroutines.
-## TODO: allow to have '-parameter'
+## TODO:+allow to have '-parameter'
 ## TODO: allow to specify '--filename=filename'
 
 =head1 NAME
@@ -552,6 +552,7 @@ sub m_init_defaults
   $self->{help}{params}{opt_descr_indent} = 13 + 4;
   $self->{help}{params}{kd_min_space} = 4;
   $self->{help}{params}{max_gap} = 15;
+  $self->{parse}{split_one_char_options} = 1;
 }
 
 # throws: Exceptions::Exception
@@ -730,6 +731,9 @@ sub m_option
     /[^\w_-]/ && throw Exception => "worong option '$name' specification: '$_'";
     exists $self->{keys}{$_} && throw Exception => "key '$_' duplicate";
     $self->{keys}{$_} = $name;
+
+    ## disable one char splitting for options ##
+    $self->{parse}{split_one_char_options} = 0 if /^-[^-]./;
   }
 
   ## define action ##
@@ -849,7 +853,7 @@ sub m_get_atom
 
     ## get option ##
     my $add_sub = 0;
-    if ($cur =~ /^\-[^\-]/ && length $cur > 2){
+    if ($self->{parse}{split_one_char_options} && $cur =~ /^\-[^\-]/ && length $cur > 2){
     # split one-char options #
       unshift @$args, substr($cur, 2);
       $add_sub = 1;
