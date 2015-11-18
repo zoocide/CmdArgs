@@ -360,7 +360,63 @@ sub help_custom_option
   $ret
 }
 
+###### PRIVATE METHODS ######
 
+# self structure
+# $self = bless {
+#   keys    => { $single_opt_key => $opt_name, },
+#   options => {
+#     keys => [@keys],
+#     type => $type,  #< Type of the argument. It cortesponds to CmdArgs::Types::Type;
+#     descr => $description_str,
+#     action => $act,  #< action may be sub{} or scalar ref or array ref.
+#     arg_name => $argument_name_str,
+#   },
+#   groups => {
+#     $group_name => [@opt_names],
+#   },
+#   use_cases => {
+#     $use_case_name => {
+#       use_case => $string_for_help_message,
+#       sequence => $uc_list,  #< recursive list: $uc_list = [$atom, $uc_list]
+#       descr    => $string_for_help_message,
+#   },
+#   restrictions => {
+#     $opt_name => [@options_conflicting_with_opt],
+#   },
+#   arrangement => {
+#     first_keys => {
+#       $first_key => $opt_name,
+#     },
+#   },
+#   help => {
+#     params => {
+#       key_indent => $integer,
+#       line_indent => $integer,
+#       opt_descr_indent => $integer,
+#       kd_min_space => $integer,
+#       max_gap => $integer,
+#     },
+#   },
+#   options_end => $bool, #< mark that options cannot appear further
+#   parsed => {
+#     use_case => $use_case_name,
+#     args => {
+#       $arg_name => $value | [@values],
+#     },
+#     options => {
+#       $opt_name => $value,
+#     },
+#     option_keys => {
+#       $opt_name => $used_key,
+#     },
+#     args_arr => [@parsed_args],
+#   },
+#   parse => {
+#     failed_arg_checks => [@exceptions], #< for error handling
+#     split_one_char_options => $bool,
+#   },
+# }, CmdArgs;
 
 sub m_update_terminal_info
 {
