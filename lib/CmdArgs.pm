@@ -15,6 +15,7 @@ our @EXPORT_OK = qw(ptext);
 ## TODO: Add tests for 'opt_or_default' method.
 ## TODO: Add tests for the new help message customizing system.
 ## TODO: Add documentation for the new help message customizing system.
+## TODO:+groups: make _GROUPS not appearing in help message.
 
 =head1 NAME
 
@@ -430,6 +431,7 @@ sub m_help_message
   my $ret = $self->m_usecases_to_str('help_custom_usecases');
   my @gr_names = $self->help_custom_groups_filter(keys %{$self->{groups}});
   for my $gr (@gr_names){
+    next if substr($gr,0,1) eq '_';
     $ret .= $self->help_custom_group_name($gr);
     my @opt_names = $self->help_custom_options_filter(
       $gr, @{$self->{groups}{$gr}}
