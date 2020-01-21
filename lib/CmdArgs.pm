@@ -8,6 +8,10 @@ use Exceptions::InternalError;
 
 use Carp;
 
+use constant {
+  dbg1 => defined &__PACKAGE__::DEBUG::ALL ? &__PACKAGE__::DEBUG::ALL : 0,
+};
+
 our $VERSION = '0.3.0';
 our @EXPORT_OK = qw(ptext);
 
@@ -95,6 +99,11 @@ CmdArgs - Parse command line arguments and automate help message creation.
 
 =cut
 
+sub dprint
+{
+  print "DEBUG: CmdArgs: $_\n" for split /\n/, join '', @_;
+}
+
 ###### PUBLIC FUNCTIONS ######
 
 # my $plain_text = ptext $text;
@@ -159,6 +168,7 @@ sub parse
 
   ## obtain @args array ##
   my @args = @_ ? split(/\s+/, $_[0]) : @ARGV;
+  dprint("parse string = '", join(' ', @args)."'") if dbg1;
 
   ## parse ##
   try{
@@ -199,6 +209,11 @@ sub parse
     $#wrp_iters > 0 && throw Exception => 'internal error: more then one use cases are suitable';
     $self->{parsed}{use_case} = $wrp_iters[0][0];
     $self->m_set_arg_names($wrp_iters[0][1]);
+    if (dbg1) {
+      dprint("use_case = $self->{parsed}{use_case}");
+      my $popts = $self->{parsed}{options};
+      dprint("option $_ = '$popts->{$_}'") for sort keys %$popts;
+    }
   }
   catch{ throw } 'Exceptions::CmdArgsInfo',
   make_exlist
