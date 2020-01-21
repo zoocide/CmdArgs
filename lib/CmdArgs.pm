@@ -29,6 +29,7 @@ our @EXPORT_OK = qw(ptext);
 ## TODO:+options: allow to specify variables references instead of subroutines.
 ## TODO:+allow to have '-parameter'
 ## TODO:+allow to specify '--filename=filename'
+## TODO:+add static variant of CmdArgs
 
 =head1 NAME
 
@@ -97,11 +98,67 @@ CmdArgs - Parse command line arguments and automate help message creation.
     $f = $args->opt('opt_1') if $args->is_opt('opt_1');
   }
 
+  ========================================
+  ## static usage of CmdArgs ##
+  use CmdArgs {
+    version => $version,
+    use_cases => ...
+    options => {
+      opt_1  => ['-f:Filename --filename', 'specify filename'],
+      verbose => ['-v', 'more verbose'],
+    },
+  };
+  # Throw errors as Exceptions::List if any occurred
+  CmdArgs->throw_errors;
+
+  # Statically optimized print. Perl will remove this line if verbose option is not specified.
+  print "something\n" if CmdArgs::OPT_verbose;
+  # CmdArgs::OPT_opt_1 is the constant contained specified filename or undefined otherwise
+  print CmdArgs::OPT_opt_1, "\n";
+
 =cut
 
 sub dprint
 {
   print "DEBUG: CmdArgs: $_\n" for split /\n/, join '', @_;
+}
+
+our $object;
+
+sub import
+{
+  my $self = shift;
+  if (@_ == 1 && ref $_[0] eq 'HASH') {
+    dprint('compile time parsing of command line arguments is used') if dbg1;
+    my $h = $_[0];
+
+    ## parse specified options ##
+    my $version = delete local $h->{version};
+    croak "version parameter is not specified" if !defined $version;
+    $object = CmdArgs->declare($version, %$h);
+    eval { $object->parse };
+    my $errors = $@;
+
+    ## set static accessors ##
+    no strict 'refs';
+    *CmdArgs::throw_errors = sub () { die $errors if $errors };
+    for my $opt (keys %{$object->{options}}) {
+      my $v = $object->opt_or_default($opt);
+      *{'CmdArgs::OPT_'.$opt} = sub () { $v };
+    }
+    for my $arg (keys %{$object->{arguments}}) {
+      my $v = exists $object->{parsed}{args}{$arg}
+            ? $object->{parsed}{args}{$arg}
+            : undef;
+      *{'CmdArgs::ARG_'.$arg} = sub () { $v };
+    }
+    my $uc = $object->{parsed}{use_case};
+    *CmdArgs::USE_CASE = sub () { $uc };
+  }
+  else {
+    dprint('runtime parsing of command line arguments is used') if dbg1;
+    $self->SUPER::import(@_)
+  }
 }
 
 ###### PUBLIC FUNCTIONS ######
@@ -380,12 +437,15 @@ sub help_custom_option
 # self structure
 # $self = bless {
 #   keys    => { $single_opt_key => $opt_name, },
+#   arguments => { $arg_name => 1 },
 #   options => {
-#     keys => [@keys],
-#     type => $type,  #< Type of the argument. It cortesponds to CmdArgs::Types::Type;
-#     descr => $description_str,
-#     action => $act,  #< action may be sub{} or scalar ref or array ref.
-#     arg_name => $argument_name_str,
+#     $opt_name => {
+#       keys => [@keys],
+#       type => $type,  #< Type of the argument. It corresponds to CmdArgs::Types::Type;
+#       descr => $description_str,
+#       action => $act,  #< action may be sub{} or scalar ref or array ref.
+#       arg_name => $argument_name_str,
+#     },
 #   },
 #   groups => {
 #     $group_name => [@opt_names],
@@ -865,6 +925,7 @@ sub m_use_case
       ## argument ##
         $self->m_check_type($t);
         $seq[$i] = ['arg', $n, $t, $q, $mult]; #<[type, arg_name, arg_type, can_absent, array]
+        $self->{arguments}{$n} = 1;
       }
     }
     else{
@@ -1125,6 +1186,55 @@ sub init { (my $self = shift)->SUPER::init(@_); chomp($self->{msg}); }
 
 1;
 __END__
+
+=head1 DESCRIPTION
+
+CmdArgs can be used in two ways: static and dynamic.
+Dynamic usage means, that you create an object with L</declare> method and
+then apply L</parse> method to prase the string or command line arguments. For example:
+
+  my $args = CmdArgs->declare('v1.0', options => ...);
+  $args->parse;
+
+Next you can call any methods to obtain an option or argument or do whatever you want.
+
+Another way ot use CmdArgs is compile-time parsing of command line arguments.
+It has advantages in optimization, cause parsed options and arguments are
+represented by constant functions. For example:
+
+  use CmdArgs {
+    version => 'v1.0',
+    use_cases => [main => ['OPTIONS', '']],
+    options => { debug => ['-D'] },
+  };
+  CmdArgs->throw_errors;
+  print "debug option is on\n" if CmdArgs::OPT_debug;
+
+Static use case creates those functions:
+
+=over
+
+=item C<CmdArgs::OPT_*>
+
+Where * is for every option specified in parse declaration.
+This function returns value of the corresponding option or C<undef> if option
+is not provided to the script.
+
+=item C<CmdArgs::ARG_*>
+
+Where * is for every argument specified in parse declaration.
+This function returns value of the corresponding argument or C<undef> if it
+is not provided to the script.
+
+=item C<CmdArgs::USE_CASE>
+
+It returns current parsed use case name.
+
+=item C<CmdArgs::throw_errors>
+
+It dies with error message if any errors occurred during parse.
+
+=back
 
 =head1 METHODS
 
