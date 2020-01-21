@@ -1,4 +1,4 @@
-CmdArgs version 0.2.1
+CmdArgs version 0.3.0
 ====================
 
 Parse command line arguments for a script and provide help messages.
