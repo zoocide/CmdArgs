@@ -9,7 +9,7 @@ use Exceptions::InternalError;
 use Carp;
 
 use constant {
-  dbg1 => defined &__PACKAGE__::DEBUG::ALL ? &__PACKAGE__::DEBUG::ALL : 0,
+  dbg1 => defined &CmdArgs::DEBUG::ALL ? &CmdArgs::DEBUG::ALL : 0,
 };
 
 our $VERSION = '0.3.0';
@@ -157,7 +157,7 @@ sub import
   }
   else {
     dprint('runtime parsing of command line arguments is used') if dbg1;
-    $self->SUPER::import(@_)
+    $self->export_to_level(1, undef, @_)
   }
 }
 
