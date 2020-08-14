@@ -229,6 +229,7 @@ sub parse
 
   ## parse ##
   try{
+    # @wrp_iters = ([$uc_name, [$uc_sequence, []]], ...)
     my @wrp_iters = map { [$_, [$self->{use_cases}{$_}{sequence}, []]] }
                         keys %{$self->{use_cases}};
     while (@args){
