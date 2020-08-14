@@ -1059,24 +1059,27 @@ sub m_fwd_iter
 
   if ($atom->[0] eq 'opt'){
   # option #
+    my $occurred;
     for(my $seq = $iter->[0]; !m_is_p_empty($seq); m_move_next_p($seq)){
       my $cur = m_value_p($seq);
-      if    ($cur->[0] eq 'group' && !m_is_opt_permitted($seq, $atom->[1])){
+      if    ($cur->[0] eq 'group'){
         if (grep $atom->[1] eq $_, @{$self->{groups}{$cur->[1]}}){
         # group contains current option
           push @ret, [$seq, $iter->[1]];
+          $occurred = 1;
         }
         next;
       }
       elsif ($cur->[0] eq 'mopt'){
         push @ret, [m_get_next_p($seq), $iter->[1]] if $atom->[1] eq $cur->[1];
+        $occurred = 1;
         next if $cur->[2]; #< '?' is present
         last;
       }
       elsif ($cur->[0] eq 'arg' && $cur->[3]){ #< '?' is presented
         next;
       }
-      elsif (m_is_opt_permitted($seq, $atom->[1])) {
+      elsif (!$occurred && m_is_opt_permitted($seq, $atom->[1])) {
         push @ret, [$seq, $iter->[1]];
         last;
       }
