@@ -523,7 +523,7 @@ sub m_use_case_msg
   for(my $seq = $uc->{sequence}; !m_is_p_empty($seq); m_move_next_p($seq)){
     my $cur = m_value_p($seq);
     if    ($cur->[0] eq 'group'){
-      $ret.= ' '.$cur->[1];
+      $ret.= ' '.($cur->[2] eq '~' ? "[$cur->[1]]" : $cur->[1]);
     }
     elsif ($cur->[0] eq 'mopt' ){
       my $o = $self->{options}{$cur->[1]};
@@ -675,8 +675,8 @@ sub m_init_defaults
   $self->{arrangement}{first_keys}{'--help'} = 'HELP';
   $self->{arrangement}{first_keys}{'--version'} = 'VERSION';
   $self->{use_cases}{main} = { use_case => 'OPTIONS args...',
-                               sequence => [['group', 'OPTIONS'],
-                                           [['arg','args','','','...'],
+                               sequence => [[['group', 'OPTIONS', ''], {}],
+                                           [[['arg','args','','','...'], {}],
                                            []]],
                                descr => ''};
   $self->{help}{params}{key_indent} = 2;
@@ -908,11 +908,17 @@ sub m_use_case
   my @seq = split /\s+/, $use_case->[0];
 
   ## parse sequence ##
+  my %cur_opts;
   for my $i (0..$#seq){
     my $w = $seq[$i];
     if (exists $self->{groups}{$w}){
     ## options group ##
-      $seq[$i] = ['group', $w]; #< [type, group_name]
+      $seq[$i] = ['group', $w, '']; #< [type, group_name]
+    }
+    elsif ($w =~ /^~(\w+)$/ && exists $self->{groups}{$1}) {
+      ## any place oprtions group ##
+      $seq[$i] = ['group', $1, '~']; #< [type, group_name]
+      $cur_opts{$_} = 1 for @{$self->{groups}{$1}};
     }
     elsif ($w =~ /^(\w+)(:(.*?))?(\.\.\.)?(\?)?$/){
       my ($n, $t, $mult, $q) = ($1, $3, $4, $5);
@@ -932,10 +938,11 @@ sub m_use_case
     else{
       throw Exception => "wrong use case '$name' spceification: syntax error in '$w'";
     }
+    $seq[$i] = [$seq[$i], {%cur_opts}] if $seq[$i];
   }
 
   my $p_seq = [];
-  $p_seq = m_p_add($p_seq, $seq[-$_]) for 1..@seq;
+  $p_seq = m_p_add($p_seq, $_) for reverse @seq;
 
   ## return new use_case ##
   my $ret = {
@@ -1054,7 +1061,7 @@ sub m_fwd_iter
   # option #
     for(my $seq = $iter->[0]; !m_is_p_empty($seq); m_move_next_p($seq)){
       my $cur = m_value_p($seq);
-      if    ($cur->[0] eq 'group'){
+      if    ($cur->[0] eq 'group' && !m_is_opt_permitted($seq, $atom->[1])){
         if (grep $atom->[1] eq $_, @{$self->{groups}{$cur->[1]}}){
         # group contains current option
           push @ret, [$seq, $iter->[1]];
@@ -1066,8 +1073,14 @@ sub m_fwd_iter
         next if $cur->[2]; #< '?' is present
         last;
       }
-      elsif ($cur->[0] eq 'arg'){
-        next if $cur->[3]; #< '?' is present
+      elsif ($cur->[0] eq 'arg' && $cur->[3]){ #< '?' is presented
+        next;
+      }
+      elsif (m_is_opt_permitted($seq, $atom->[1])) {
+        push @ret, [$seq, $iter->[1]];
+        last;
+      }
+      elsif ($cur->[0] eq 'arg'){ #< '?' is not persented
         last;
       }
       else{
@@ -1087,7 +1100,7 @@ sub m_fwd_iter
         last;
       }
       elsif ($cur->[0] eq 'arg'){
-        my $present = !m_is_p_empty($iter->[1]) && m_value_p($iter->[1]) eq $cur;
+        my $present = !m_is_p_empty($iter->[1]) && m_parsed_value_p($iter->[1]) eq $cur;
         if (!$cur->[2] || eval{$self->m_check_arg($atom->[1], $cur->[2])}){
           push @ret, [$cur->[4] ? $seq : m_get_next_p($seq), m_p_add($iter->[1], $cur)];
         }
@@ -1116,7 +1129,7 @@ sub m_fwd_iter
         return ();
       }
       elsif ($cur->[0] eq 'arg'){
-        my $present = !m_is_p_empty($iter->[1]) && m_value_p($iter->[1]) eq $cur;
+        my $present = !m_is_p_empty($iter->[1]) && m_parsed_value_p($iter->[1]) eq $cur;
         next if $cur->[3] || ($cur->[4] && $present);
         return ();
       }
@@ -1133,11 +1146,14 @@ sub m_fwd_iter
   @ret
 }
 
+# p = [[$value, {%global_options}], $next]
 sub m_is_p_empty  { @{$_[0]} == 0 }                   #< $bool = m_is_p_empty($p);
 sub m_move_next_p { $_[0] = $_[0][1] }                #< m_move_next_p($p);
 sub m_get_next_p  { $_[0][1] }                        #< $next = m_get_next_p($p);
-sub m_value_p     { $_[0][0] }                        #< $value = m_value_p($p);
+sub m_value_p     { $_[0][0][0] }                     #< $value = m_value_p($p);
+sub m_parsed_value_p { $_[0][0] }
 sub m_p_add       { [$_[1], $_[0]] }                  #< $new_p = m_p_add($p, $value)
+sub m_is_opt_permitted { exists ${$_[0][0][1]}{$_[1]} }  #< $bool = m_is_opt_permitted($p, $opt_name);
 
 # m_dbg($condition, caller_depth);
 sub m_dbg
@@ -1166,7 +1182,7 @@ sub m_set_arg_names
 
   ## set arguments values ##
   for (my $p = $iter->[1]; !m_is_p_empty($p); m_move_next_p($p)){
-    my $cur = m_value_p($p);
+    my $cur = m_parsed_value_p($p);
     $cur->[0] eq 'arg' || throw InternalError => "wrong type '$cur->[0]' of arguments sequence";
     if ($cur->[4]){
     # array #
