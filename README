@@ -1,7 +1,7 @@
-CmdArgs version 0.3.0
+CmdArgs version 0.4.0
 ====================
 
-Parse command line arguments for a script and provide help messages.
+CmdArgs provides a convenient way to parse command-line arguments of the script and print help message.
 
 INSTALLATION
 

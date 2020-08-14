@@ -1,5 +1,48 @@
 Revision history for Perl extension CmdArgs.
 
+0.4.0:
+  + add CmdArgs/BasicTypes.pm.
+  + add restrictions.
+  + add customizable help message generation system.
+  + add static use case for CmdArgs.
+  + add expressions in a group specification, e.g. qw(* ^opt ^ABOUT).
+  + add ability to specify option argument name.
+  + add ability to specify a variable reference instead of option's action subroutine.
+  + add ability to have options with the single '-', e.g. '-option'.
+  + add ability to set options this way: 'option=value'.
+  + add ability to enable debugging messages.
+  + add setting of local $_ variable in option's action subroutine.
+  + add an arrangement of options in the group 'OPTIONS' by the first key.
+  + add new default group ABOUT.
+  + add export function ptext.
+  + add method opt_or_default.
+  + add method set_help_params.
+  + add method get_help_params.
+  + add method usage_custom_usecases.
+  + add method help_custom_usecases.
+  + add method help_custom_groups_filter.
+  + add method help_custom_group_name.
+  + add method help_custom_options_filter.
+  + add method help_custom_option.
+  + add method m_update_teminal_info.
+  + add method m_usecases_to_str.
+  + add function m_format_text.
+  + add function m_split_text.
+  + add function m_smart_split_by_width.
+  + add more tests.
+  + add performance test perf_test.pl.
+  + change to hide _GROUPS in help message.
+  + change the group for HELP and VERSION options to ABOUT.
+  + change location of arrangement data to $self->{arrangement}.
+  + change $self->{use_cases_order} to $self->{arrangement}{use_cases}.
+  + change error messages for failed checks of typed arguments.
+  + change HELP and VERSION options descriptions.
+  + change method m_usage_message.
+  + change method m_help_message.
+  + fix documentation.
+  + fix error messages.
+  + fix to print specified key in error message instead of option name.
+
 0.3.0:
   + fixed help and usage messages.
   + options action
