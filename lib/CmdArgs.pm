@@ -677,7 +677,8 @@ sub m_init_defaults
   $self->{use_cases}{main} = { use_case => 'OPTIONS args...',
                                sequence => [[['group', 'OPTIONS', ''], {}],
                                            [[['arg','args','','','...'], {}],
-                                           []]],
+                                           [[['end'],{}],
+                                           []]]],
                                descr => ''};
   $self->{help}{params}{key_indent} = 2;
   $self->{help}{params}{line_indent} = 0;
@@ -941,7 +942,7 @@ sub m_use_case
     $seq[$i] = [$seq[$i], {%cur_opts}] if $seq[$i];
   }
 
-  my $p_seq = [];
+  my $p_seq = m_p_add([], [['end'],{%cur_opts}]);
   $p_seq = m_p_add($p_seq, $_) for reverse @seq;
 
   ## return new use_case ##
@@ -1086,6 +1087,9 @@ sub m_fwd_iter
       elsif ($cur->[0] eq 'arg'){ #< '?' is not persented
         last;
       }
+      elsif ($cur->[0] eq 'end'){
+        last;
+      }
       else{
         throw InternalError => "wrong type '$cur->[0]' of sequence";
       }
@@ -1114,6 +1118,9 @@ sub m_fwd_iter
         next if $cur->[3] || ($cur->[4] && $present);
         last;
       }
+      elsif ($cur->[0] eq 'end') {
+        last;
+      }
       else{
         throw InternalError => "wrong type '$cur->[0]' of sequence";
       }
@@ -1135,6 +1142,9 @@ sub m_fwd_iter
         my $present = !m_is_p_empty($iter->[1]) && m_parsed_value_p($iter->[1]) eq $cur;
         next if $cur->[3] || ($cur->[4] && $present);
         return ();
+      }
+      elsif ($cur->[0] eq 'end'){
+        next;
       }
       else{
         throw InternalError => "wrong type '$cur->[0]' of sequence";

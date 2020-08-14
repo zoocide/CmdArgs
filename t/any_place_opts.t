@@ -89,7 +89,7 @@ check_parse(
 
 ## ~OPTIONS --mopt args... ##
 %decl = (
-  use_cases => [main => ['~OPTIONS mopt args...', '']],
+  use_cases => [main => ['~OPTIONS mopt arg', '']],
   options => {
     opt1 => ['--opt1', ''],
     opt2 => ['--opt2', ''],
@@ -101,28 +101,28 @@ check_parse(
 );
 check_parse(
   \%decl,
-  '--mopt a b',
+  '--mopt a',
   sub {
     ok(!$args->is_opt('opt1'));
-    is_deeply($args->arg('args'), [qw(a b)]);
+    is($args->arg('arg'), 'a');
   }
 );
 check_parse(
   \%decl,
-  '--opt1 --mopt --opt2 a b',
+  '--opt1 --mopt --opt2 a',
   sub {
     ok($args->is_opt('opt1'));
     ok($args->is_opt('opt2'));
-    is_deeply($args->arg('args'), [qw(a b)]);
+    is($args->arg('arg'), 'a');
   }
 );
 check_parse(
   \%decl,
-  '--mopt a --opt2 b --opt1',
+  '--mopt --opt2 a --opt1',
   sub {
     ok($args->is_opt('opt1'));
     ok($args->is_opt('opt2'));
-    is_deeply($args->arg('args'), [qw(a b)]);
+    is($args->arg('arg'), 'a');
   }
 );
 
