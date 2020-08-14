@@ -38,7 +38,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 can_ok($args, 'opt');
 can_ok($args, 'opts');
@@ -65,7 +65,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is($args->opt('not_existed'), undef);
@@ -89,7 +89,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is($args->opt('not_existed'), undef);
@@ -114,7 +114,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is($args->opt('not_existed'), undef);
@@ -141,7 +141,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is($args->opt('not_existed'), undef);
@@ -168,7 +168,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is($args->opt('not_existed'), undef);
@@ -192,7 +192,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is($args->opt('not_existed'), undef);
@@ -216,7 +216,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is(ref $args->arg('arg2'), 'ARRAY');
@@ -235,7 +235,7 @@ eval{
   );
   $args->parse;
 };
-ok(!$@);
+is($@ ? "$@" : '', '');
 isa_ok($args, 'CmdArgs');
 ok(!$args->is_opt('not_existed'));
 is(ref $args->arg('arg2'), 'ARRAY');
