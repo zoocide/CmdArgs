@@ -2,6 +2,8 @@ Changes
 Makefile.PL
 MANIFEST
 README
+t/any_place_opts.t
+t/basic_types.t
 t/CmdArgs.t
 t/CmdArgs.0.3.t
 t/CmdArgs.1.0.t

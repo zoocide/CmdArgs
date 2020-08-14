@@ -1,5 +1,11 @@
 Revision history for Perl extension CmdArgs.
 
+0.5.0:
+  + add any-place options.
+  + add PositiveInt and NonnegativeInt to BasicTypes.
+  + add t/any_place_otps.t.
+  + add t/basic_types.t.
+
 0.4.0:
   + add CmdArgs/BasicTypes.pm.
   + add restrictions.
