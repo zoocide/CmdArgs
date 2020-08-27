@@ -1072,8 +1072,13 @@ sub m_fwd_iter
         next;
       }
       elsif ($cur->[0] eq 'mopt'){
-        push @ret, [m_get_next_p($seq), $iter->[1]] if $atom->[1] eq $cur->[1];
-        $occurred = 1;
+        if ($atom->[1] eq $cur->[1]) {
+          push @ret, [m_get_next_p($seq), $iter->[1]];
+          $occurred = 1;
+        }
+        elsif (!$occurred && m_is_opt_permitted($seq, $atom->[1])){
+          push @ret, [$seq, $iter->[1]];
+        }
         next if $cur->[2]; #< '?' is present
         last;
       }
