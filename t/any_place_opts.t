@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 43;
+use Test::More tests => 52;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -119,6 +119,36 @@ check_parse(
 check_parse(
   \%decl,
   '--mopt --opt2 a --opt1',
+  sub {
+    ok($args->is_opt('opt1'));
+    ok($args->is_opt('opt2'));
+    is($args->arg('arg'), 'a');
+  }
+);
+
+## ~OPTIONS arg --mopt ##
+%decl = (
+  use_cases => [main => ['~OPTIONS arg mopt', '']],
+  options => {
+    opt1 => ['--opt1', ''],
+    opt2 => ['--opt2', ''],
+    mopt => ['--mopt', ''],
+  },
+  groups => {
+    OPTIONS => [qw(opt1 opt2)],
+  },
+);
+check_parse(
+  \%decl,
+  'a --mopt',
+  sub {
+    ok(!$args->is_opt('opt1'));
+    is($args->arg('arg'), 'a');
+  }
+);
+check_parse(
+  \%decl,
+  'a --opt1 --mopt --opt2',
   sub {
     ok($args->is_opt('opt1'));
     ok($args->is_opt('opt2'));
