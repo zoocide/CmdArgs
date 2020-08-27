@@ -1,5 +1,8 @@
 Revision history for Perl extension CmdArgs.
 
+0.5.1:
+  + fix the case 'mopt after arg' for any-place-options.
+
 0.5.0:
   + add any-place options.
   + add PositiveInt and NonnegativeInt to BasicTypes.
