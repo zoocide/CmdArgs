@@ -1342,6 +1342,7 @@ C<atom = group_name | opt_name | arg_name>
 
 C<group_name> - means that at this place an options from specified
 group can appear.
+C<~group_name> can be used to make options from the group to appear at any place after this position.
 
 C<opt_name> - option I<opt_name> must be placed here.
 
