@@ -745,6 +745,7 @@ sub m_groups
     ref $gr eq 'ARRAY' || throw Exception => "worng group '$gr_name' specification:"
                                            .' group must be an array of options';
 
+    $self->{groups}{$gr_name} = [];
     for my $name (@$gr){
       my $to_del = ($name =~ s/^\^//);
       if ($name eq '*'){
