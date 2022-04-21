@@ -12,7 +12,7 @@ use constant {
   dbg1 => defined &CmdArgs::DEBUG::ALL ? &CmdArgs::DEBUG::ALL : 0,
 };
 
-our $VERSION = '0.5.1';
+our $VERSION = '0.6.0';
 our @EXPORT_OK = qw(ptext);
 
 ## TODO: Add more tests (help and usage! messages).

@@ -1,5 +1,12 @@
 Revision history for Perl extension CmdArgs.
 
+0.6.0:
+  + add arguments partial parsing.
+  + add method parse_begin.
+  + add method parse_part.
+  + add method parse_end.
+  + fix the using of an empy group.
+
 0.5.1:
   + fix the case 'mopt after arg' for any-place-options.
 
