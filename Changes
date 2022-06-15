@@ -1,5 +1,8 @@
 Revision history for Perl extension CmdArgs.
 
+0.6.1:
+  + fix to reset '--' state for each parse_part invocation.
+
 0.6.0:
   + add arguments partial parsing.
   + add method parse_begin.
