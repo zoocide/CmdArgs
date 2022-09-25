@@ -1017,16 +1017,16 @@ sub m_use_case
   my @seq = split /\s+/, $use_case->[0];
 
   ## parse sequence ##
-  my %cur_opts;
+  my %cur_opts; # { $opt => 1, ... }
   for my $i (0..$#seq){
     my $w = $seq[$i];
     if (exists $self->{groups}{$w}){
     ## options group ##
-      $seq[$i] = ['group', $w, '']; #< [type, group_name]
+      $seq[$i] = ['group', $w, '']; #< [type, group_name, msg_flag]
     }
     elsif ($w =~ /^~(\w+)$/ && exists $self->{groups}{$1}) {
-      ## any place oprtions group ##
-      $seq[$i] = ['group', $1, '~']; #< [type, group_name]
+      ## any place options group ##
+      $seq[$i] = ['group', $1, '~']; #< [type, group_name, msg_flag]
       $cur_opts{$_} = 1 for @{$self->{groups}{$1}};
     }
     elsif ($w =~ /^(\w+)(:(.*?))?(\.\.\.)?(\?)?$/){
