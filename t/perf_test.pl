@@ -2,8 +2,13 @@
 use strict;
 use Time::HiRes qw(time);
 
+{
+  my $sep = $^O eq 'MSWin32' ? ';' : ':';
+  $ENV{PERL5LIB} = join $sep, ($ENV{PERL5LIB} ? $ENV{PERL5LIB} : ()), @INC;
+}
+
 my $pref='perf_test/';
-my $perl='perl -I../lib';
+my $perl=$^X;
 my $args = 'ok';
 my $h = {
   empty_program_inline => sub { `$perl -e '' $args` },
