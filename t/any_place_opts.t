@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 52;
+use Test::More tests => 77;
 use CmdArgs;
 ok(1); # If we made it this far, we're ok.
 
@@ -153,6 +153,61 @@ check_parse(
     ok($args->is_opt('opt1'));
     ok($args->is_opt('opt2'));
     is($args->arg('arg'), 'a');
+  }
+);
+
+## ~GR1 arg1 ~GR2 arg2 ##
+%decl = (
+  use_cases => [main => ['~GR1 arg1 ~GR2 arg2', '']],
+  options => {
+    opt1 => ['--opt1', ''],
+    opt2 => ['--opt2', ''],
+    opt3 => ['--opt3', ''],
+  },
+  groups => {
+    GR1 => [qw(opt1 opt2)],
+    GR2 => [qw(opt3)],
+  },
+);
+check_parse(
+  \%decl,
+  'a b',
+  sub {
+    ok(!$args->is_opt('opt1'));
+    ok(!$args->is_opt('opt3'));
+    is($args->arg('arg1'), 'a');
+    is($args->arg('arg2'), 'b');
+  }
+);
+check_parse(
+  \%decl,
+  '--opt1 a --opt3 b',
+  sub {
+    ok($args->is_opt('opt1'));
+    ok($args->is_opt('opt3'));
+    is($args->arg('arg1'), 'a');
+    is($args->arg('arg2'), 'b');
+  }
+);
+check_parse(
+  \%decl,
+  'a --opt1 --opt3 b',
+  sub {
+    ok($args->is_opt('opt1'));
+    ok($args->is_opt('opt3'));
+    is($args->arg('arg1'), 'a');
+    is($args->arg('arg2'), 'b');
+  }
+);
+check_parse(
+  \%decl,
+  'a b --opt1 --opt3 --opt2',
+  sub {
+    ok($args->is_opt('opt1'));
+    ok($args->is_opt('opt2'));
+    ok($args->is_opt('opt3'));
+    is($args->arg('arg1'), 'a');
+    is($args->arg('arg2'), 'b');
   }
 );
 
