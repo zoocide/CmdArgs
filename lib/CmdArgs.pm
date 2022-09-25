@@ -1029,16 +1029,21 @@ sub m_use_case
       $seq[$i] = ['group', $1, '~']; #< [type, group_name, msg_flag]
       $cur_opts{$_} = 1 for @{$self->{groups}{$1}};
     }
-    elsif ($w =~ /^(\w+)(?::(.*?))?(\.\.\.)?(\?)?$/){
-      my ($n, $t, $mult, $q) = ($1, $2, $3, $4);
+    elsif ($w =~ /^(~)?(\w+)(?::(.*?))?(\.\.\.)?(\?)?$/){
+      my ($ap, $n, $t, $mult, $q) = ($1, $2, $3, $4, $5);
       if (exists $self->{options}{$n}){
       ## mandatory option ##
+        $ap && !$q and throw Exception => "wrong use case '$name' spceification: "
+          ."'$w': modifier ~ without ? is not supported yet";
         ($t || $mult) && throw Exception => "wrong use case '$name' specification: "
                                            ."syntax error in option '$n' specification";
         $seq[$i] = ['mopt', $n, $q]; #< [type, option_name, can_absent]
+        $cur_opts{$n} = 1 if $ap;
       }
       else{
       ## argument ##
+        $ap and throw Exception => "wrong use case '$name' spceification at '$w': "
+          ."arguments does not support ~ modifier";
         $self->m_check_type($t);
         $seq[$i] = ['arg', $n, $t, $q, $mult]; #<[type, arg_name, arg_type, can_absent, array]
         $self->{arguments}{$n} = 1;
