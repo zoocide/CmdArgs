@@ -1029,8 +1029,8 @@ sub m_use_case
       $seq[$i] = ['group', $1, '~']; #< [type, group_name, msg_flag]
       $cur_opts{$_} = 1 for @{$self->{groups}{$1}};
     }
-    elsif ($w =~ /^(\w+)(:(.*?))?(\.\.\.)?(\?)?$/){
-      my ($n, $t, $mult, $q) = ($1, $3, $4, $5);
+    elsif ($w =~ /^(\w+)(?::(.*?))?(\.\.\.)?(\?)?$/){
+      my ($n, $t, $mult, $q) = ($1, $2, $3, $4);
       if (exists $self->{options}{$n}){
       ## mandatory option ##
         ($t || $mult) && throw Exception => "wrong use case '$name' specification: "
