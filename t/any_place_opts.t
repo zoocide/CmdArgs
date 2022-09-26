@@ -254,3 +254,14 @@ sub check_parse
     $prove->();
   }
 }
+
+sub check_parse_fail
+{
+  my ($decl, $str, $prove) = @_;
+  local our $args = eval { CmdArgs->declare('0.1', %$decl) };
+  is("$@", '', "decl: $str");
+  if ($args) {
+    eval { $args->parse($str) };
+    isnt("$@", '', "parse fail: $str");
+  }
+}

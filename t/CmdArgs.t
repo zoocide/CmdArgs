@@ -16,7 +16,8 @@ ok(1); # If we made it this far, we're ok.
 
 # Insert your test code below, the Test::More module is use()ed here so read
 # its man page ( perldoc Test::More ) for help writing this test script.
-my $args;
+our $args;
+my %decl;
 local @ARGV;
 
 {
@@ -827,3 +828,27 @@ eval{
 };
 is("$@", '');
 is(eval {$args->opt('f')}, 'ok');
+
+
+sub check_parse
+{
+  my ($decl, $str, $prove) = @_;
+  local our $args = eval { CmdArgs->declare('0.1', %$decl) };
+  is("$@", '', "decl: $str");
+  if ($args) {
+    eval { $args->parse($str) };
+    is("$@", '', "parse: $str");
+    $prove->();
+  }
+}
+
+sub check_parse_fail
+{
+  my ($decl, $str, $prove) = @_;
+  local our $args = eval { CmdArgs->declare('0.1', %$decl) };
+  is("$@", '', "decl: $str");
+  if ($args) {
+    eval { $args->parse($str) };
+    isnt("$@", '', "parse fail: $str");
+  }
+}
