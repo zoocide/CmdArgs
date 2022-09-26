@@ -18,6 +18,7 @@ my $h = {
   CmdArgsStatic => sub { `$perl ${pref}cmdargs-static.pl $args` },
   CmdArgsDoNormal => sub { `$perl ${pref}cmdargs-do-normal.pl $args` },
   CmdArgsDoStatic => sub { `$perl ${pref}cmdargs-do-static.pl $args` },
+  GetoptLongEmpty => sub { `$perl ${pref}getopt-long-empty.pl $args` },
 };
 my %res;
 
