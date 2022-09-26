@@ -560,7 +560,7 @@ sub help_custom_option
 #   use_cases => {
 #     $use_case_name => {
 #       use_case => $string_for_help_message,
-#       sequence => $uc_list,  #< recursive list: $uc_list = [$atom, $uc_list]
+#       sequence => $uc_list,  #< recursive list: $uc_list = [[$atom, $permitted_opts], $uc_list]
 #       descr    => $string_for_help_message,
 #   },
 #   restrictions => {
@@ -1282,7 +1282,7 @@ sub m_is_p_empty  { @{$_[0]} == 0 }                   #< $bool = m_is_p_empty($p
 sub m_move_next_p { $_[0] = $_[0][1] }                #< m_move_next_p($p);
 sub m_get_next_p  { $_[0][1] }                        #< $next = m_get_next_p($p);
 sub m_value_p     { $_[0][0][0] }                     #< $value = m_value_p($p);
-sub m_parsed_value_p { $_[0][0] }
+sub m_parsed_value_p { $_[0][0] }                     #< for lists of form [$value, $next]
 sub m_p_add       { [$_[1], $_[0]] }                  #< $new_p = m_p_add($p, $value)
 sub m_is_opt_permitted { exists ${$_[0][0][1]}{$_[1]} }  #< $bool = m_is_opt_permitted($p, $opt_name);
 
@@ -1296,6 +1296,9 @@ sub m_dbg
   }
 }
 
+# iter: [sequence, parsed_arguments]
+# sequence         = [] | [elm1, []] | [elm1, [elm2, []]] | ...
+# parsed_arguments = [] | [arg1, []] | [arg1, [arg2, []]] | ...
 sub m_is_iter_empty { @{$_[0][0]} == 0 } #< $bool = m_is_iter_empty($iter);
 
 # throws: Exceptions::Exception
