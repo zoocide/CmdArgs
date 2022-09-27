@@ -802,6 +802,7 @@ sub m_init_defaults
   $self->{groups}{ABOUT}    = [qw(HELP VERSION)];
   $self->{arrangement}{first_keys}{'--help'} = 'HELP';
   $self->{arrangement}{first_keys}{'--version'} = 'VERSION';
+  # TODO: make default use_case '~OPTIONS args...'.
   $self->{use_cases}{main} = { use_case => 'OPTIONS args...',
                                sequence => [[['group', 'OPTIONS', ''], {}],
                                            [[['arg','args','','','...'], {}],
