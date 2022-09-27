@@ -813,8 +813,8 @@ sub m_options
 
   ref $opts eq 'HASH' || throw Exception => 'wrong options specification: hash should be used';
 
-  while (my ($name, $val) = each %$opts){
-    $self->{options}{$name} = $self->m_option($name, $val);
+  for my $name (keys %$opts) {
+    $self->{options}{$name} = $self->m_option($name, $opts->{$name});
   }
 
   ## arrange options by the first key ##
@@ -913,8 +913,8 @@ sub m_use_cases
     || throw Exception => 'wrong use cases specification: hash or array should be used';
   %$use_cases or throw Exception => 'one or more use cases should be defined';
 
-  while (my ($name, $val) = each %$use_cases){
-    $self->{use_cases}{$name} = $self->m_use_case($name, $val);
+  for my $name (keys %$use_cases) {
+    $self->{use_cases}{$name} = $self->m_use_case($name, $use_cases->{$name});
   }
 }
 
