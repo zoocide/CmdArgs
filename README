@@ -1,4 +1,4 @@
-CmdArgs version 0.6.1
+CmdArgs version 0.7.0
 ====================
 
 CmdArgs provides a convenient way to parse command-line arguments of the script and print help message.

@@ -19,7 +19,7 @@ use constant {
 };
 use if dbg1, 'Data::Dumper';
 
-our $VERSION = '0.6.1';
+our $VERSION = '0.7.0';
 our @EXPORT_OK = qw(ptext);
 
 ## TODO: Add more tests (help and usage! messages).

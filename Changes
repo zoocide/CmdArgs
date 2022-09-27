@@ -1,5 +1,17 @@
 Revision history for Perl extension CmdArgs.
 
+0.7.0:
+  + add support of ~mopt? in the use case specification.
+  + add ignoring of options permutations in the use case.
+  + add constant $CmdArgs::DEBUG_LEVEL to control debug messages.
+  + add more error checks.
+  + add more tests.
+  + add t/lib/CmdArgsTest.pm as the container for common test functions.
+  + fix error in redeclaration after failure.
+  + fix resolution of ambiguous GROUP GROUP case.
+  + fix missing suitable cases.
+  + fix perf_test.pl.
+
 0.6.1:
   + fix to reset '--' state for each parse_part invocation.
 

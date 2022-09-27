@@ -4,11 +4,14 @@ MANIFEST
 README
 t/any_place_opts.t
 t/basic_types.t
-t/CmdArgs.t
 t/CmdArgs.0.3.t
 t/CmdArgs.1.0.t
+t/CmdArgs.t
 t/groups.t
 t/opt_action.t
+t/partial_parsing.t
+t/sequence.t
 t/static_use_case.t
+t/lib/CmdArgsTest.pm
 lib/CmdArgs.pm
 lib/CmdArgs/BasicTypes.pm
