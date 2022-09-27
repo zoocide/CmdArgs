@@ -276,8 +276,18 @@ sub parse
       my $u = $_->[0];
       map [$u, $_], $self->m_fwd_iter(['end'], $_->[1])
     } @wrp_iters;
+    dbg1 and dprint("num suitable sequences = ", scalar @wrp_iters);
     $#wrp_iters < 0 && throw Exception => 'wrong arguments';
-    $#wrp_iters > 0 && throw Exception => 'internal error: more then one use cases are suitable';
+    #$#wrp_iters > 0 && throw Exception => 'internal error: more then one use cases are suitable';
+    if ($#wrp_iters > 0) {
+      # Using any-place options may cause alternative parsed sequences.
+      # But use case should be the only one.
+      my $wi = $wrp_iters[0];
+      for (@wrp_iters[1..$#wrp_iters]) {
+        next if m_eq_end_wrp_iters($wi, $_);
+        throw Exception => 'internal error: more then one use cases are suitable';
+      }
+    }
     $self->{parsed}{use_case} = $wrp_iters[0][0];
     $self->m_set_arg_names($wrp_iters[0][1]);
     if (dbg1) {
@@ -1349,6 +1359,29 @@ sub m_group_contains
     return 1 if $_ eq $_[2];
   }
   0
+}
+
+# $bool = m_eq_end_wrp_iters($wrp_iter1, $wrp_iter2);
+# wrp_iter = [$use_case_name, [[], $parsed_arguments]]
+# parsed_arguments = [] | [arg1, []] | [arg1, [arg2, []]] | ...
+# arg = ['arg', $arg_name, $arg_type, $can_absent, $is_array]
+sub m_eq_end_wrp_iters
+{
+  my ($it1, $it2) = @_;
+  return 0 if $it1->[0] ne $it2->[0];
+  my $p1 = $it1->[1][1];
+  my $p2 = $it2->[1][1];
+  #use Data::Dumper;
+  #print STDERR Dumper([$it1, $it2]);
+
+  while(!m_is_p_empty($p1)) {
+    return 0 if m_is_p_empty($p2)
+      || m_value_p($p1)->[1] ne m_value_p($p2)->[1]; #< $arg_name1 != $arg_name2
+    m_move_next_p($p1);
+    m_move_next_p($p2);
+  }
+  return 0 if !m_is_p_empty($p2);
+  1
 }
 
 
