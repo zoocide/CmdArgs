@@ -1185,11 +1185,14 @@ sub m_fwd_iter
 
   if ($atom->[0] eq 'opt'){
   # option #
+    my $ap;
     my $occurred;
     for(my $seq = $iter->[0]; !m_is_p_empty($seq); m_move_next_p($seq)){
+      $ap = $seq if !defined $ap && m_is_opt_permitted($seq, $atom->[1]);
       my $cur = m_value_p($seq);
       if    ($cur->[0] eq 'group'){
-        if (grep $atom->[1] eq $_, @{$self->{groups}{$cur->[1]}}){
+        #$cur = ['group', $name, $ap_flag]
+        if (!$occurred && $self->m_group_contains($cur->[1], $atom->[1])){
         # group contains current option
           push @ret, [$seq, $iter->[1]];
           $occurred = 1;
@@ -1201,18 +1204,11 @@ sub m_fwd_iter
           push @ret, [m_get_next_p($seq), $iter->[1]];
           $occurred = 1;
         }
-        elsif (!$occurred && m_is_opt_permitted($seq, $atom->[1])){
-          push @ret, [$seq, $iter->[1]];
-        }
         next if $cur->[2]; #< '?' is present
         last;
       }
       elsif ($cur->[0] eq 'arg' && $cur->[3]){ #< '?' is presented
         next;
-      }
-      elsif (!$occurred && m_is_opt_permitted($seq, $atom->[1])) {
-        push @ret, [$seq, $iter->[1]];
-        last;
       }
       elsif ($cur->[0] eq 'arg'){ #< '?' is not persented
         last;
@@ -1224,6 +1220,7 @@ sub m_fwd_iter
         throw InternalError => "wrong type '$cur->[0]' of sequence";
       }
     }
+    push @ret, [$ap, $iter->[1]] if !$occurred && defined $ap;
   }
   elsif ($atom->[0] eq 'arg'){
   # argument #
@@ -1339,6 +1336,16 @@ sub m_set_arg_names
     }
   }
   @args && throw InternalError => 'parsed arguments mismatch ['.scalar(@args).']';
+}
+
+# $bool = $self->m_group_contains($group_name, $opt_name);
+sub m_group_contains
+{
+  #grep $atom->[1] eq $_, @{$self->{groups}{$cur->[1]}}
+  for (@{$_[0]{groups}{$_[1]}}) {
+    return 1 if $_ eq $_[2];
+  }
+  0
 }
 
 
