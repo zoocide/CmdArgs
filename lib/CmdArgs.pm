@@ -446,9 +446,14 @@ sub usage_custom_usecases
     my $i = 1;
     $ret .= join '', map '  '.($i++).": $_->[1]\n", @ucs;
   }
-  else{
+  elsif (@ucs) {
     $ret .= "  $ucs[0][1]\n";
   }
+  else{
+    dbg1 and dprint(Dumper($self));
+    throw InternalError => 'no use_cases are defined';
+  }
+
   $ret .= "Try --help option for help.\n";
   $ret
 }
@@ -906,6 +911,7 @@ sub m_use_cases
 
   ref $use_cases eq 'HASH'
     || throw Exception => 'wrong use cases specification: hash or array should be used';
+  %$use_cases or throw Exception => 'one or more use cases should be defined';
 
   while (my ($name, $val) = each %$use_cases){
     $self->{use_cases}{$name} = $self->m_use_case($name, $val);
