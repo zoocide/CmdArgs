@@ -1049,7 +1049,7 @@ sub m_use_case
           ."'$w': modifier ~ without ? is not supported yet";
         ($t || $mult) && throw Exception => "wrong use case '$name' specification: "
                                            ."syntax error in option '$n' specification";
-        $seq[$i] = ['mopt', $n, $q]; #< [type, option_name, can_absent]
+        $seq[$i] = ['mopt', $n, $q, $ap]; #< [type, option_name, can_absent, ap_flag]
         $cur_opts{$n} = 1 if $ap;
       }
       else{
@@ -1192,6 +1192,7 @@ sub m_fwd_iter
       my $cur = m_value_p($seq);
       if    ($cur->[0] eq 'group'){
         #$cur = ['group', $name, $ap_flag]
+        next if $cur->[2];
         if (!$occurred && $self->m_group_contains($cur->[1], $atom->[1])){
         # group contains current option
           push @ret, [$seq, $iter->[1]];
@@ -1200,6 +1201,8 @@ sub m_fwd_iter
         next;
       }
       elsif ($cur->[0] eq 'mopt'){
+        #$cur = ['mopt', $name, $can_absent, $ap_flag]
+        next if $cur->[3];
         if ($atom->[1] eq $cur->[1]) {
           push @ret, [m_get_next_p($seq), $iter->[1]];
           $occurred = 1;
@@ -1220,7 +1223,7 @@ sub m_fwd_iter
         throw InternalError => "wrong type '$cur->[0]' of sequence";
       }
     }
-    push @ret, [$ap, $iter->[1]] if !$occurred && defined $ap;
+    push @ret, [$ap, $iter->[1]] if defined $ap;
   }
   elsif ($atom->[0] eq 'arg'){
   # argument #
