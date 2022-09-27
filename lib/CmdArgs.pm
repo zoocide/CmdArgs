@@ -7,10 +7,17 @@ use Exceptions;
 use Exceptions::InternalError;
 
 use Carp;
-
+BEGIN {
+  if (!defined &DEBUG_LEVEL) {
+    my $v = defined &CmdArgs::DEBUG::ALL && CmdArgs::DEBUG::ALL() ? 2 : 0;
+    *DEBUG_LEVEL = sub () { $v };
+  }
+}
 use constant {
-  dbg1 => defined &CmdArgs::DEBUG::ALL ? &CmdArgs::DEBUG::ALL : 0,
+  dbg1 => DEBUG_LEVEL > 0,
+  dbg2 => DEBUG_LEVEL > 1,
 };
+use if dbg1, 'Data::Dumper';
 
 our $VERSION = '0.6.1';
 our @EXPORT_OK = qw(ptext);
