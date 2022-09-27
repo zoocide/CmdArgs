@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 165;
+use Test::More tests => 178;
 use CmdArgs;
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -246,6 +246,39 @@ is(ref $args->arg('arg2'), 'ARRAY');
 is($args->arg('arg1'), 'arg1');
 ok(eq_array($args->arg('arg2'), [qw(a1 a2 a3)]));
 
+## ambiguous array and optional argument ##
+%decl = (
+  use_cases => [main => ['args... arg?', '']],
+);
+check_parse(
+  \%decl,
+  'a',
+  sub {
+    is_deeply($args->arg('args'), ['a']);
+  }
+);
+check_parse_fail(
+  \%decl,
+  'a b',
+);
+
+## ambiguous array and array fault ##
+%decl = (
+  use_cases => [main => ['args1... args2...', '']],
+);
+check_parse(
+  \%decl,
+  'a b',
+  sub {
+    is_deeply($args->arg('args1'), ['a']);
+    is_deeply($args->arg('args2'), ['b']);
+  }
+);
+check_parse_fail(
+  \%decl,
+  'a b c',
+);
+
 ## typed option ##
 undef $args;
 @ARGV = qw(-v -w ok);
@@ -477,6 +510,28 @@ eval{
   $args->parse;
 };
 isnt("$@", '');
+isa_ok($args, 'CmdArgs');
+
+## ambiguous group-group ##
+undef $args;
+@ARGV = qw(-a);
+eval{
+  $args = CmdArgs->declare(
+    '3.0',
+    options => {
+      opt_a => ['-a', ''],
+    },
+    groups => {
+      OPTS_1 => [qw(opt_a)],
+      OPTS_2 => [qw(opt_a)],
+    },
+    use_cases => {
+      main => ['OPTS_1 OPTS_2', ''],
+    },
+  );
+  $args->parse;
+};
+is("$@", '');
 isa_ok($args, 'CmdArgs');
 
 ## group-empty_group ##
