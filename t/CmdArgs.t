@@ -9,6 +9,7 @@ use strict;
 use warnings;
 
 use Test::More tests => 178;
+#use constant 'CmdArgs::DEBUG_LEVEL' => 2;
 use CmdArgs;
 use FindBin;
 use lib "$FindBin::Bin/lib";

@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Test::More tests => 31;
-#use constant 'CmdArgs::DEBUG_LEVEL' => 1;
+#use constant 'CmdArgs::DEBUG_LEVEL' => 2;
 use CmdArgs;
 use FindBin;
 use lib "$FindBin::Bin/lib";
@@ -85,8 +85,5 @@ TODO: {
   check_parse(\%decl, '-opt -opt');
   }
   check_parse(\%decl, '-opt -a -opt');
-  TODO: {
-  local $TODO = "deal with ~OPT? OPT";
   check_parse(\%decl, '-a -opt -b -opt');
-  }
 }
