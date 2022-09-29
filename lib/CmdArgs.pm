@@ -1041,7 +1041,7 @@ sub m_use_case
   my @seq = split /\s+/, $use_case->[0];
 
   ## parse sequence ##
-  my %cur_opts; # { $opt => 1, ... }
+  my %cur_opts; # { $opt => $min_num, ... }
   for my $i (0..$#seq){
     my $w = $seq[$i];
     if (exists $self->{groups}{$w}){
@@ -1051,18 +1051,16 @@ sub m_use_case
     elsif ($w =~ /^~(\w+)$/ && exists $self->{groups}{$1}) {
       ## any place options group ##
       $seq[$i] = ['group', $1, '~']; #< [type, group_name, msg_flag]
-      $cur_opts{$_} = 1 for @{$self->{groups}{$1}};
+      $cur_opts{$_} //= 0 for @{$self->{groups}{$1}};
     }
     elsif ($w =~ /^(~)?(\w+)(?::(.*?))?(\.\.\.)?(\?)?$/){
       my ($ap, $n, $t, $mult, $q) = ($1, $2, $3, $4, $5);
       if (exists $self->{options}{$n}){
       ## mandatory option ##
-        $ap && !$q and throw Exception => "wrong use case '$name' spceification: "
-          ."'$w': modifier ~ without ? is not supported yet";
         ($t || $mult) && throw Exception => "wrong use case '$name' specification: "
                                            ."syntax error in option '$n' specification";
         $seq[$i] = ['mopt', $n, $q, $ap]; #< [type, option_name, can_absent, ap_flag]
-        $cur_opts{$n} = 1 if $ap;
+        $cur_opts{$n} += $q ? 0 : 1 if $ap;
       }
       else{
       ## argument ##
@@ -1185,9 +1183,10 @@ sub m_get_atom
   ['arg', $cur]
 }
 
-# iter: [sequence, parsed_arguments]
+# iter: [sequence, parsed_arguments, opt_state]
 # sequence         = [] | [elm1, []] | [elm1, [elm2, []]] | ...
 # parsed_arguments = [] | [arg1, []] | [arg1, [arg2, []]] | ...
+# opt_state = { opt => $state }
 # returns: (@fwd_iters)
 # throws: Exceptions::Exception, Exceptions::InternalError
 sub m_fwd_iter
@@ -1197,17 +1196,18 @@ sub m_fwd_iter
 
   if ($atom->[0] eq 'opt'){
   # option #
+    my $opt_name = $atom->[1];
     my $ap;
     my $occurred;
     for(my $seq = $iter->[0]; !m_is_p_empty($seq); m_move_next_p($seq)){
-      $ap = $seq if !defined $ap && m_is_opt_permitted($seq, $atom->[1]);
+      $ap = $seq if !defined $ap && m_is_opt_permitted($seq, $opt_name);
       my $cur = m_value_p($seq);
       if    ($cur->[0] eq 'group'){
         #$cur = ['group', $name, $ap_flag]
         next if $cur->[2];
-        if (!$occurred && $self->m_group_contains($cur->[1], $atom->[1])){
+        if (!$occurred && $self->m_group_contains($cur->[1], $opt_name)){
         # group contains current option
-          push @ret, [$seq, $iter->[1]];
+          push @ret, [$seq, @{$iter}[1,2]];
           $occurred = 1;
         }
         next;
@@ -1215,8 +1215,8 @@ sub m_fwd_iter
       elsif ($cur->[0] eq 'mopt'){
         #$cur = ['mopt', $name, $can_absent, $ap_flag]
         next if $cur->[3];
-        if ($atom->[1] eq $cur->[1]) {
-          push @ret, [m_get_next_p($seq), $iter->[1]];
+        if ($opt_name eq $cur->[1]) {
+          push @ret, [m_get_next_p($seq), @{$iter}[1,2]];
           $occurred = 1;
         }
         next if $cur->[2]; #< '?' is present
@@ -1235,7 +1235,13 @@ sub m_fwd_iter
         throw InternalError => "wrong type '$cur->[0]' of sequence";
       }
     }
-    push @ret, [$ap, $iter->[1]] if defined $ap;
+    if (defined $ap) {
+      my $n = $iter->[2]{$opt_name} // 0;
+      my $k = m_opt_permitted_val($ap, $opt_name);
+      local $iter->[2]{$opt_name} = $k > $n ? $n+1 : $n;
+      dbg2 and dprint("any-place $opt_name appears ($iter->[2]{$opt_name}/$k)");
+      push @ret, [$ap, $iter->[1], {%{$iter->[2]}}];
+    }
   }
   elsif ($atom->[0] eq 'arg'){
   # argument #
@@ -1245,13 +1251,17 @@ sub m_fwd_iter
         next;
       }
       elsif ($cur->[0] eq 'mopt'){
-        next if $cur->[2]; #< '?' is present
+        next if $cur->[2] || $cur->[3]; #< '?' or '~' is present
         last;
       }
       elsif ($cur->[0] eq 'arg'){
         my $present = !m_is_p_empty($iter->[1]) && m_parsed_value_p($iter->[1]) eq $cur;
         if (!$cur->[2] || eval{$self->m_check_arg($atom->[1], $cur->[2])}){
-          push @ret, [$cur->[4] ? $seq : m_get_next_p($seq), m_p_add($iter->[1], $cur)];
+          push @ret, [
+            $cur->[4] ? $seq : m_get_next_p($seq),
+            m_p_add($iter->[1], $cur),
+            $iter->[2]
+          ];
         }
         elsif($cur->[2] && $@){
           # m_check_arg failed
@@ -1277,7 +1287,7 @@ sub m_fwd_iter
         next;
       }
       elsif ($cur->[0] eq 'mopt'){
-        next if $cur->[2]; #< '?' is present
+        next if $cur->[2] || $cur->[3]; #< '?' or '~' is present
         return ();
       }
       elsif ($cur->[0] eq 'arg'){
@@ -1286,13 +1296,14 @@ sub m_fwd_iter
         return ();
       }
       elsif ($cur->[0] eq 'end'){
-        next;
+        m_check_required_opts($seq, $iter->[2]) or return ();
+        last;
       }
       else{
         throw InternalError => "wrong type '$cur->[0]' of sequence";
       }
     }
-    return [[], $iter->[1]]; #< return empty sequence
+    return [[], @{$iter}[1,2]]; #< return empty sequence
   }
   else{
     throw InternalError => "wrong atom type ($atom->[0])";
@@ -1309,6 +1320,7 @@ sub m_value_p     { $_[0][0][0] }                     #< $value = m_value_p($p);
 sub m_parsed_value_p { $_[0][0] }                     #< for lists of form [$value, $next]
 sub m_p_add       { [$_[1], $_[0]] }                  #< $new_p = m_p_add($p, $value)
 sub m_is_opt_permitted { exists ${$_[0][0][1]}{$_[1]} }  #< $bool = m_is_opt_permitted($p, $opt_name);
+sub m_opt_permitted_val { ${$_[0][0][1]}{$_[1]} }     #< $val = m_opt_permitted_val($p, $opt_name);
 
 # m_dbg($condition, caller_depth);
 sub m_dbg
@@ -1361,6 +1373,21 @@ sub m_group_contains
     return 1 if $_ eq $_[2];
   }
   0
+}
+
+# $bool = m_check_required_opts($seq, $opt_state);
+sub m_check_required_opts
+{
+  my ($seq, $opt_state) = @_;
+  my $opts = $seq->[0][1];
+  for (keys %$opts) {
+    my $n = $opt_state->{$_} // 0;
+    if ($n < $opts->{$_}) {
+      dbg2 and dprint("required option $_ is messed ($n/$opts->{$_})");
+      return 0;
+    }
+  }
+  1
 }
 
 # $bool = m_eq_end_wrp_iters($wrp_iter1, $wrp_iter2);

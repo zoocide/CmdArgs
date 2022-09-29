@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 178;
+use Test::More tests => 202;
 #use constant 'CmdArgs::DEBUG_LEVEL' => 2;
 use CmdArgs;
 use FindBin;
@@ -887,3 +887,42 @@ eval{
 };
 is("$@", '');
 is(eval {$args->opt('f')}, 'ok');
+
+#############################################
+
+%decl = (
+  options => { OPT => ['-opt'], OPT1 => ['-opt1'], OPT2 => ['-opt2'], OPT3 => ['-opt3']},
+  groups => { GR => [qw(OPT OPT1)], GR1 => [qw(OPT1 OPT2)], GR2 => [qw(OPT3)] },
+);
+
+## OPT ##
+{
+  local $decl{use_cases} = {main => ['OPT']};
+  check_parse(\%decl, '-opt');
+  check_parse_fail(\%decl, '');
+  check_parse_fail(\%decl, '-opt -opt');
+}
+
+## OPT? ##
+{
+  local $decl{use_cases} = {main => ['OPT?']};
+  check_parse(\%decl, '');
+  check_parse(\%decl, '-opt');
+  check_parse_fail(\%decl, '-opt -opt');
+}
+
+## ~OPT ##
+{
+  local $decl{use_cases} = {main => ['~OPT']};
+  check_parse(\%decl, '-opt');
+  check_parse(\%decl, '-opt -opt');
+  check_parse_fail(\%decl, '');
+}
+
+## ~OPT? ##
+{
+  local $decl{use_cases} = {main => ['~OPT?']};
+  check_parse(\%decl, '-opt');
+  check_parse(\%decl, '-opt -opt');
+  check_parse(\%decl, '');
+}

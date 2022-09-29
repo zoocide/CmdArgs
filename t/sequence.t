@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 31;
+use Test::More tests => 61;
 #use constant 'CmdArgs::DEBUG_LEVEL' => 2;
 use CmdArgs;
 use FindBin;
@@ -30,10 +30,9 @@ my %decl = (
 }
 
 ## ~OPT OPT ##
-TODO: {
-  local $TODO = "~OPT is not supported yet";
+{
   local $decl{use_cases} = {main => ['~OPT OPT']};
-  check_parse(\%decl, '-opt');
+  check_parse_fail(\%decl, '-opt');
   check_parse(\%decl, '-opt -opt');
 }
 
@@ -42,11 +41,9 @@ TODO: {
 {
   local $decl{use_cases} = {main => ['~OPT? OPT']};
   check_parse(\%decl, '-opt');
-  TODO: {
-  local $TODO = "deal with ~OPT? OPT";
   check_parse(\%decl, '-opt -opt');
-  }
 }
+
 
 ## GROUP OPT ##
 {
@@ -59,10 +56,25 @@ TODO: {
 {
   local $decl{use_cases} = {main => ['~GROUP OPT']};
   check_parse(\%decl, '-opt');
-  TODO: {
-  local $TODO = "deal with ~OPT? OPT";
   check_parse(\%decl, '-opt -opt');
-  }
+}
+
+## ~OPT ~OPT OPT ##
+{
+  local $decl{use_cases} = {main => ['~OPT ~OPT OPT']};
+  check_parse_fail(\%decl, '-opt');
+  check_parse_fail(\%decl, '-opt -opt');
+  check_parse(\%decl, '-opt -opt -opt');
+  check_parse(\%decl, '-opt -opt -opt -opt');
+}
+
+## ~OPT ~OPT? OPT ##
+{
+  local $decl{use_cases} = {main => ['~OPT ~OPT? OPT']};
+  check_parse_fail(\%decl, '-opt');
+  check_parse(\%decl, '-opt -opt');
+  check_parse(\%decl, '-opt -opt -opt');
+  check_parse(\%decl, '-opt -opt -opt -opt');
 }
 
 ## ~GR1 GR2 OPT ##
@@ -80,10 +92,23 @@ TODO: {
 );
 {
   check_parse(\%decl, '-opt');
-  TODO: {
-  local $TODO = "deal with ~OPT? OPT";
   check_parse(\%decl, '-opt -opt');
-  }
   check_parse(\%decl, '-opt -a -opt');
   check_parse(\%decl, '-a -opt -b -opt');
+}
+
+## ~OPT arg ##
+{
+  local $decl{use_cases} = {main => ['~OPT arg']};
+  check_parse(\%decl, '-opt arg');
+  check_parse(\%decl, 'arg -opt');
+  check_parse_fail(\%decl, 'arg');
+}
+
+## ~OPT args... ##
+{
+  local $decl{use_cases} = {main => ['~OPT args...']};
+  check_parse(\%decl, '-opt arg');
+  check_parse(\%decl, 'arg1 -opt arg2');
+  check_parse_fail(\%decl, 'arg');
 }
