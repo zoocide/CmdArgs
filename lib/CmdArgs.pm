@@ -971,7 +971,8 @@ sub m_option
   my ($self, $name, $opt_value) = @_;
 
   ## unpack $opt_value ##
-  $#$opt_value < 0 && throw Exception => "wrong option '$name' specification";
+  ref $opt_value eq 'ARRAY' && @$opt_value > 0
+    or throw Exception => "wrong option '$name' specification";
 
   my $val = $opt_value->[0];
 
