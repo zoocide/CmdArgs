@@ -499,7 +499,7 @@ sub help_custom_usecases
 sub help_custom_groups_filter
 {
   shift;
-  @_
+  sort @_
 }
 
 # $msg.= $args->help_custom_group('group_name');
