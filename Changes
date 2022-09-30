@@ -1,5 +1,13 @@
 Revision history for Perl extension CmdArgs.
 
+0.8.0:
+  + add support of ~OPT.
+  + add tests.
+  + add options groups sorting in help message.
+  + change the required perl version to v5.10.
+  + change documentation.
+  + fix error check.
+
 0.7.0:
   + add support of ~mopt? in the use case specification.
   + add ignoring of options permutations in the use case.
