@@ -1,5 +1,5 @@
 package CmdArgs;
-use 5.00008;
+use v5.10;
 use strict;
 use warnings;
 use parent qw(Exporter);
@@ -1425,8 +1425,8 @@ __END__
 =head1 DESCRIPTION
 
 CmdArgs can be used in two ways: static and dynamic.
-Dynamic usage means, that you create an object with L</declare> method and
-then apply L</parse> method to prase the string or command line arguments. For example:
+Dynamic usage means, that you create an object with C<declare> method and
+then apply C<parse> method to prase the string or command line arguments. For example:
 
   my $args = CmdArgs->declare('v1.0', options => ...);
   $args->parse;
@@ -1473,9 +1473,7 @@ It dies with error message if any errors occurred during parse.
 
 =head1 METHODS
 
-=over
-
-=item C<< declare($version, section => value, ...) >>
+=head2 C<< declare($version, section => value, ...) >>
 
 throws: string
 
@@ -1546,13 +1544,20 @@ C<~group_name> can be used to make options from the group to appear at any place
 
 C<opt_name> - option I<opt_name> must be placed here.
 
+C<opt_name?> - option I<opt_name> can appear at this position.
+
+C<~opt_name> - option I<opt_name> must appear at any place after this position at least once.
+If at the occurrence place should be mandatory option, this option must appears somewhere else.
+
+C<~opt_name?> - option I<opt_name> can appear at any place after this position.
+
 C<arg_name> - an argument named I<arg_name>.
 
-C<arg_name:> - an argument with value of any type.
+C<arg_name:> - the same.
 
 C<arg_name:type> - an argument with value of the specified type.
 
-C<arg_name...> - array of arguments. One or more arguments are permitted.
+C<arg_name:type...> - a typed array of arguments. One or more arguments are permitted.
 
 C<arg_name...?> - array of arguments. Zero or more arguments are permitted.
 
@@ -1574,13 +1579,13 @@ And I<opt_4> and I<opt_1> also can not appear simultaneously.
 
 =back
 
-=item C<parse($string)>
+=head2 C<parse($string)>
 
 throws: C<Exceptions::List>
 
 Parse C<$string> or C<@ARGV> array if C<$string> is not specified.
 
-=item C<parse_begin>
+=head2 C<parse_begin>
 
 Start the partial parsing.
 It should be followed by calls of C<parse_part> and the final C<parse_end>.
@@ -1592,7 +1597,7 @@ For example,
 
 That code is doing the same thing as the single call C<$args-E<gt>parse>.
 
-=item C<parse_part(\@args)>
+=head2 C<parse_part(\@args)>
 
 throws: C<Exceptions::List>
 
@@ -1603,52 +1608,48 @@ This method allows to parse the part of arguments and make a decision to parse
 the next or not.
 Use C<parse_end> to finish arguments parsing.
 
-=item C<parse_end>
+=head2 C<parse_end>
 
 throws: C<Exceptions::List>
 
 The method completes arguments partial parsing and throws any exceptions occurred.
 See C<parse_begin> and C<parse_part> methods.
 
-=item C<arg($name)>
+=head2 C<arg($name)>
 
 Get argument with name C<$name>.
 If argument is specified as C<name...> returns a reference to the array.
 
-=item C<opt($name)>
+=head2 C<opt($name)>
 
 Get value of the C<$name> option.
 
-=item C<opt_or_default($name, $default_value)>
+=head2 C<opt_or_default($name, $default_value)>
 
 If option C<$name> is specified, this method returns option C<$name> value.
 Otherwise, it returns C<$default_value>.
 
-=item C<is_opt($name)>
+=head2 C<is_opt($name)>
 
 Check whether the C<$name> option is appeared.
 
-=item C<args>
+=head2 C<args> [deprecated]
 
 It returns a hash contained all parsed arguments.
 
-=item C<opts>
+=head2 C<opts> [deprecated]
 
 Return a hash contained all parsed options.
 
-=item C<use_case>
+=head2 C<use_case>
 
 Return name of parsed use case.
-
-=back
 
 =head1 EXPORT
 
 By default it exports nothing. You may explicitly import folowing:
 
-=over
-
-=item C<ptext($text)>
+=head2 C<ptext($text)>
 
 It removes every single end of line from C<$text> and returns result.
 So you can write something like that:
@@ -1661,12 +1662,10 @@ So you can write something like that:
   New paragraph.
   EOF
 
-=back
-
 =head1 TYPES
 
 To declare a new type, a corresponding package should be defined.
-To define I<MyType> there should be package named C<CmdArgs::Types::MyType>,
+To define C<MyType> there should be package named C<CmdArgs::Types::MyType>,
 that contains subroutine C<check>.
 Subroutine C<check> must validate argument by returning positive boolean value.
 For example:
@@ -1679,6 +1678,10 @@ For example:
       -f $arg or die "'$arg' is not a file\n"
     }
   }
+
+The lazy way to define a C<Foo> type:
+
+  *CmdArgs::Types::Foo::check = sub { $_[1] eq 'foo' };
 
 =head1 EXAMPLE
 
@@ -1698,8 +1701,8 @@ For example:
   my $args = CmdArgs->declare(
     '1.0',
     use_cases => [
-      single => ['OPTIONS file1:EPath file2:NotDir', 'Copy one file to another.'],
-      multi  => ['OPTIONS files:EPath... dest_dir:Dir', 'Copy files to directory.'],
+      single => ['~OPTIONS file1:EPath file2:NotDir', 'Copy one file to another.'],
+      multi  => ['~OPTIONS files:EPath... dest_dir:Dir', 'Copy files to directory.'],
     ],
     options => {
       recursive => ['-r --recursive', 'Copy directories recursively.'],
