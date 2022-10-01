@@ -25,14 +25,14 @@ our @EXPORT_OK = qw(ptext);
 ## TODO: Add more tests (help and usage! messages).
 ## TODO: Add tests for 'opt_or_default' method.
 ## TODO: Add tests for the new help message customizing system.
-## TODO: Add documentation for the new help message customizing system.
-## TODO: groups: update documentation
+## TODO:+Add documentation for the new help message customizing system.
+## TODO:+groups: update documentation
 ## TODO:+groups: add * to include all options
 ## TODO:+groups: allow to include whole groups, by specifying its name.
 ## TODO:+groups: add ^ exculde mark
 ## TODO:+groups: make _GROUPS not appearing in help message.
 ## TODO:+groups: add default group ABOUT
-## TODO: options: update documentation
+## TODO:+options: update documentation
 ## TODO:+options: allow to specify variables references instead of subroutines.
 ## TODO:+allow to have '-parameter'
 ## TODO:+allow to specify '--filename=filename'
@@ -509,7 +509,7 @@ sub help_custom_group_name
   "$group_name:\n"
 }
 
-# $opt_names = $args->help_custom_options_filter('group_name', @opt_names);
+# @opt_names = $args->help_custom_options_filter('group_name', @opt_names);
 sub help_custom_options_filter
 {
   my $self = shift;
@@ -1645,6 +1645,18 @@ Return a hash contained all parsed options.
 
 Return name of parsed use case.
 
+=head2 C<print_help> [deprecated]
+
+It prints the version message and help text.
+
+=head2 C<print_usage_and_exit> [deprecated]
+
+It prints the usage message and exits with code -1.
+
+=head2 C<print_version> [deprecated]
+
+It prints the version message.
+
 =head1 EXPORT
 
 By default it exports nothing. You may explicitly import folowing:
@@ -1682,6 +1694,128 @@ For example:
 The lazy way to define a C<Foo> type:
 
   *CmdArgs::Types::Foo::check = sub { $_[1] eq 'foo' };
+
+=head1 CUSTOMIZATION OF HELP
+
+Generation of help is the one of main reasons this package exist.
+The engine smartly adopts to terminal width to avoid the text look like a mess.
+There is a number of methods that controls the help text generation.
+You can redefine some of them to reach the desired result.
+A method could be changed with inheritance or by the direct replacing in current scope.
+
+=head2 Methods of help customization.
+
+=head3 set_help_params($self, %params)
+
+  $args->(
+    key_indent => 2,
+    line_indent => 0,
+    opt_descr_indent => 17,
+    kd_min_space => 4,
+    max_gap => 15
+  );
+
+It sets the specified parameters.
+
+=over 12
+
+=item key_indent
+
+The indent from the left to the first key of option.
+
+=item line_indent
+
+The indent of the first line of an option description.
+
+=item opt_descr_indent
+
+The indent from the left to an option description.
+
+=item kd_min_space
+
+The minimal space between the options keys and its description.
+
+=item max_gap
+
+Formatter tries to avoid break words, but does it to avoid to much empty space on the right.
+The parameter specifies the maximum right empty space before formatter decides to break the word.
+
+=back
+
+=head3 get_help_params($self)
+
+  my %params = $args->get_help_params;
+
+Returns all current parameters.
+
+=head2 Methods of help customization by redefinition.
+
+=head3 usage_custom_usecases($self, [$uc_name, $uc_scheme, $uc_description],...)
+
+  $usage_message = $args->usage_custom_usecases(
+    ['main', 'OPTIONS args...', 'Description of the main use case.'],
+    ['second', '', 'Description of the second use case.'],
+  );
+
+It generates usage text.
+
+=head3 help_custom_usecases(['usecase', 'scheme', 'descr'],...)
+
+  $help_message = $args->help_custom_usecases(
+    ['main', 'OPTIONS args...', 'Description of the main use case.'],
+    ['second', '', 'Description of the second use case.'],
+  );
+
+It generates the use cases section of help text.
+
+=head3 help_custom_groups_filter(@group_names)
+
+  @group_names = $args->help_custom_groups_filter(@all_group_names);
+
+It is invoked with all existing group names as arguments.
+The method returns a list of group names that will appear in help text in the specified order.
+
+For example if you want to remove group I<ABOUT> from the text, use this:
+
+  *CmdArgs::help_custom_groups_filter = sub {
+    shift; #< remove $self from @_
+    sort grep $_ ne 'ABOUT', @_
+  };
+
+=head3 help_custom_group($self, $group_name)
+
+  $help_message .= $args->help_custom_group('ABOUT');
+
+It generates the cap of options group.
+By default the method returns the string containing the group name.
+You can redefine it to add groups description just before its options:
+
+  {package MyCmdArgs; use parent 'CmdArgs';
+    my %groups_descr = (
+      ABOUT => "These options can appear anywhere.",
+      OPTIONS => "The handy script options.",
+    );
+    sub help_custom_group_name {
+      "$_[1]:\n$groups_descr{$_[1]}\n\n"
+    };
+  }
+  my $args = MyCmdArgs->declare(...);
+
+=head3 help_custom_options_filter($self, $group_name, @opt_names)
+
+  @opt_names = $args->help_custom_options_filter(ABOUT => qw(help version));
+
+It is invoked with the group name and all its options names.
+The method returns a list of option names that will appear in help text in the specified order.
+You can redefine it to change the order or remove some options.
+
+=head3 help_custom_option($self, $opt_name, [@keys], $arg_type, $arg_name, $descr)
+
+  # opt_1  => ['-f:Filename<FILE> --filename', 'Read the FILE.'],
+  $help_message .= $args->help_custom_option(
+     'opt_1', [qw(-f --filename)], 'Filename', 'FILE', 'Read the FILE.');
+
+This method generates text string for the option.
 
 =head1 EXAMPLE
 
