@@ -1707,7 +1707,7 @@ A method could be changed with inheritance or by the direct replacing in current
 
 =head3 set_help_params($self, %params)
 
-  $args->(
+  $args->set_help_params(
     key_indent => 2,
     line_indent => 0,
     opt_descr_indent => 17,
